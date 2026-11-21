@@ -32,7 +32,7 @@ class WordExtractor(BaseExtractor):
         file_path: Path to the file to load.
     """
 
-    def __init__(self, file_path: str, tenant_id: str, user_id: str):
+    def __init__(self, file_path: str, tenant_id: str | None = None, user_id: str | None = None):
         """Initialize with file path."""
         self.file_path = file_path
         self.tenant_id = tenant_id
@@ -82,7 +82,10 @@ class WordExtractor(BaseExtractor):
 
     def _extract_images_from_docx(self, doc):
         image_count = 0
-        image_map = {}
+        image_map: dict[object, str] = {}
+        if not self.tenant_id or not self.user_id:
+            # Images are stored as tenant-owned upload files; without an owner, keep the text only.
+            return image_map
         base_url = dify_config.INTERNAL_FILES_URL or dify_config.FILES_URL
 
         for r_id, rel in doc.part.rels.items():
