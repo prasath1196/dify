@@ -35,7 +35,6 @@ from models import (
 from models.enums import ExecutionOffLoadType
 from models.model import UploadFile
 from models.workflow import WorkflowNodeExecutionOffload
-from services.file_service import FileService
 from services.variable_truncator import VariableTruncator
 
 logger = logging.getLogger(__name__)
@@ -106,7 +105,10 @@ class SQLAlchemyWorkflowNodeExecutionRepository(WorkflowNodeExecutionRepository)
         # Initialize in-memory cache for node executions
         self._node_execution_cache: dict[str, WorkflowNodeExecutionModel] = {}
 
-        # Initialize FileService for handling offloaded data
+        # Imported lazily: services.file_service transitively imports core.tools, which
+        # imports this module via core.repositories, forming an import cycle.
+        from services.file_service import FileService
+
         self._file_service = FileService(session_factory)
 
     def _create_truncator(self) -> VariableTruncator:
