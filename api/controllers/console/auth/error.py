@@ -71,12 +71,6 @@ class EmailCodeError(BaseHTTPException):
     code = 400
 
 
-class EmailOrPasswordMismatchError(BaseHTTPException):
-    error_code = "email_or_password_mismatch"
-    description = "The email or password is mismatched."
-    code = 400
-
-
 class AuthenticationFailedError(BaseHTTPException):
     error_code = "authentication_failed"
     description = "Invalid email or password."
