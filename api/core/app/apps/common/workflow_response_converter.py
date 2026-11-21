@@ -51,7 +51,7 @@ from core.workflow.runtime import GraphRuntimeState
 from core.workflow.system_variable import SystemVariable
 from core.workflow.workflow_entry import WorkflowEntry
 from core.workflow.workflow_type_encoder import WorkflowRuntimeTypeConverter
-from libs.datetime_utils import naive_utc_now
+from libs.datetime_utils import naive_utc_now, utc_timestamp
 from models import Account, EndUser
 from services.variable_truncator import BaseTruncator, DummyVariableTruncator, VariableTruncator
 
@@ -203,7 +203,7 @@ class WorkflowResponseConverter:
                 id=run_id,
                 workflow_id=workflow_id,
                 inputs=self._workflow_inputs,
-                created_at=int(started_at.timestamp()),
+                created_at=int(utc_timestamp(started_at)),
             ),
         )
 
@@ -257,8 +257,8 @@ class WorkflowResponseConverter:
                 total_tokens=graph_runtime_state.total_tokens,
                 total_steps=graph_runtime_state.node_run_steps,
                 created_by=created_by,
-                created_at=int(started_at.timestamp()),
-                finished_at=int(finished_at.timestamp()),
+                created_at=int(utc_timestamp(started_at)),
+                finished_at=int(utc_timestamp(finished_at)),
                 files=self.fetch_files_from_node_outputs(outputs_mapping),
                 exceptions_count=exceptions_count,
             ),
@@ -284,7 +284,7 @@ class WorkflowResponseConverter:
                 node_type=event.node_type,
                 title=snapshot.title,
                 index=snapshot.index,
-                created_at=int(snapshot.start_at.timestamp()),
+                created_at=int(utc_timestamp(snapshot.start_at)),
                 iteration_id=event.in_iteration_id,
                 loop_id=event.in_loop_id,
                 agent_strategy=event.agent_strategy,
@@ -368,8 +368,8 @@ class WorkflowResponseConverter:
                 error=error_message,
                 elapsed_time=elapsed_time,
                 execution_metadata=metadata,
-                created_at=int(start_at.timestamp()),
-                finished_at=int(finished_at.timestamp()),
+                created_at=int(utc_timestamp(start_at)),
+                finished_at=int(utc_timestamp(finished_at)),
                 files=self.fetch_files_from_node_outputs(event.outputs or {}),
                 iteration_id=event.in_iteration_id,
                 loop_id=event.in_loop_id,
@@ -417,8 +417,8 @@ class WorkflowResponseConverter:
                 error=event.error,
                 elapsed_time=elapsed_time,
                 execution_metadata=metadata,
-                created_at=int(snapshot.start_at.timestamp()),
-                finished_at=int(finished_at.timestamp()),
+                created_at=int(utc_timestamp(snapshot.start_at)),
+                finished_at=int(utc_timestamp(finished_at)),
                 files=self.fetch_files_from_node_outputs(event.outputs or {}),
                 iteration_id=event.in_iteration_id,
                 loop_id=event.in_loop_id,

@@ -4,7 +4,7 @@ import logging
 from core.rag.index_processor.constant.built_in_field import BuiltInField, MetadataDataSource
 from extensions.ext_database import db
 from extensions.ext_redis import redis_client
-from libs.datetime_utils import naive_utc_now
+from libs.datetime_utils import naive_utc_now, utc_timestamp
 from libs.login import current_account_with_tenant
 from models.dataset import Dataset, DatasetMetadata, DatasetMetadataBinding
 from services.dataset_service import DocumentService
@@ -154,8 +154,8 @@ class MetadataService:
                         doc_metadata = copy.deepcopy(document.doc_metadata)
                     doc_metadata[BuiltInField.document_name] = document.name
                     doc_metadata[BuiltInField.uploader] = document.uploader
-                    doc_metadata[BuiltInField.upload_date] = document.upload_date.timestamp()
-                    doc_metadata[BuiltInField.last_update_date] = document.last_update_date.timestamp()
+                    doc_metadata[BuiltInField.upload_date] = utc_timestamp(document.upload_date)
+                    doc_metadata[BuiltInField.last_update_date] = utc_timestamp(document.last_update_date)
                     doc_metadata[BuiltInField.source] = MetadataDataSource[document.data_source_type]
                     document.doc_metadata = doc_metadata
                     db.session.add(document)
@@ -215,8 +215,8 @@ class MetadataService:
                 if dataset.built_in_field_enabled:
                     doc_metadata[BuiltInField.document_name] = document.name
                     doc_metadata[BuiltInField.uploader] = document.uploader
-                    doc_metadata[BuiltInField.upload_date] = document.upload_date.timestamp()
-                    doc_metadata[BuiltInField.last_update_date] = document.last_update_date.timestamp()
+                    doc_metadata[BuiltInField.upload_date] = utc_timestamp(document.upload_date)
+                    doc_metadata[BuiltInField.last_update_date] = utc_timestamp(document.last_update_date)
                     doc_metadata[BuiltInField.source] = MetadataDataSource[document.data_source_type]
                 document.doc_metadata = doc_metadata
                 db.session.add(document)

@@ -35,6 +35,17 @@ def ensure_naive_utc(dt: datetime.datetime) -> datetime.datetime:
     return dt.astimezone(datetime.UTC).replace(tzinfo=None)
 
 
+def utc_timestamp(dt: datetime.datetime) -> float:
+    """Return the Unix timestamp of dt, treating naive datetimes as UTC.
+
+    datetime.timestamp() reads naive values as server-local time, which is wrong for
+    the naive UTC datetimes stored throughout Dify on hosts not running in UTC.
+    """
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.UTC)
+    return dt.timestamp()
+
+
 def parse_time_range(
     start: str | None, end: str | None, tzname: str
 ) -> tuple[datetime.datetime | None, datetime.datetime | None]:

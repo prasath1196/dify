@@ -14,6 +14,7 @@ from core.helper.provider_cache import NoOpProviderCredentialCache
 from core.mcp.types import OAuthClientInformation, OAuthClientMetadata, OAuthTokens
 from core.tools.entities.common_entities import I18nObject
 from core.tools.entities.tool_entities import ToolProviderType
+from libs.datetime_utils import utc_timestamp
 
 if TYPE_CHECKING:
     from models.tools import MCPToolProvider
@@ -165,7 +166,7 @@ class MCPProviderEntity(BaseModel):
             "is_team_authorization": self.authed,
             "server_url": self.masked_server_url(),
             "server_identifier": self.provider_id,
-            "updated_at": int(self.updated_at.timestamp()),
+            "updated_at": int(utc_timestamp(self.updated_at)),
             "label": I18nObject(en_US=self.name, zh_Hans=self.name).to_dict(),
             "description": I18nObject(en_US="", zh_Hans="").to_dict(),
         }

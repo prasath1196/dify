@@ -6,6 +6,8 @@ import sqlalchemy as sa
 from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
+from libs.datetime_utils import utc_timestamp
+
 from .base import TypeBase
 from .types import AdjustedJSON, LongText, StringUUID, adjusted_json_index
 
@@ -72,7 +74,7 @@ class DataSourceApiKeyAuthBinding(TypeBase):
             "category": self.category,
             "provider": self.provider,
             "credentials": json.loads(self.credentials) if self.credentials else None,
-            "created_at": self.created_at.timestamp(),
-            "updated_at": self.updated_at.timestamp(),
+            "created_at": utc_timestamp(self.created_at),
+            "updated_at": utc_timestamp(self.updated_at),
             "disabled": self.disabled,
         }

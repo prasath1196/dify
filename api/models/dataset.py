@@ -23,6 +23,7 @@ from core.rag.index_processor.constant.query_type import QueryType
 from core.rag.retrieval.retrieval_methods import RetrievalMethod
 from core.tools.signature import sign_upload_file
 from extensions.ext_storage import storage
+from libs.datetime_utils import utc_timestamp
 from libs.uuid_utils import uuidv7
 from services.entities.knowledge_entities.knowledge_entities import ParentMode, Rule
 
@@ -471,7 +472,7 @@ class Document(Base):
                             "extension": file_detail.extension,
                             "mime_type": file_detail.mime_type,
                             "created_by": file_detail.created_by,
-                            "created_at": file_detail.created_at.timestamp(),
+                            "created_at": utc_timestamp(file_detail.created_at),
                         }
                     }
             elif self.data_source_type in {"notion_import", "website_crawl"}:
@@ -576,7 +577,7 @@ class Document(Base):
                 "id": "built-in",
                 "name": BuiltInField.upload_date,
                 "type": "time",
-                "value": str(self.created_at.timestamp()),
+                "value": str(utc_timestamp(self.created_at)),
             }
         )
         built_in_fields.append(
@@ -584,7 +585,7 @@ class Document(Base):
                 "id": "built-in",
                 "name": BuiltInField.last_update_date,
                 "type": "time",
-                "value": str(self.updated_at.timestamp()),
+                "value": str(utc_timestamp(self.updated_at)),
             }
         )
         built_in_fields.append(

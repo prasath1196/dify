@@ -32,7 +32,7 @@ from core.workflow.nodes.base.node import Node
 from core.workflow.nodes.loop.entities import LoopCompletedReason, LoopNodeData, LoopVariableData
 from core.workflow.utils.condition.processor import ConditionProcessor
 from factories.variable_factory import TypeMismatchError, build_segment_with_type, segment_to_variable
-from libs.datetime_utils import naive_utc_now
+from libs.datetime_utils import naive_utc_now, utc_timestamp
 
 if TYPE_CHECKING:
     from core.workflow.graph_engine import GraphEngine
@@ -435,7 +435,7 @@ class LoopNode(LLMUsageTrackingMixin, Node[LoopNodeData]):
         # Create a new GraphRuntimeState for this iteration
         graph_runtime_state_copy = GraphRuntimeState(
             variable_pool=self.graph_runtime_state.variable_pool,
-            start_at=start_at.timestamp(),
+            start_at=utc_timestamp(start_at),
         )
 
         # Create a new node factory with the new GraphRuntimeState

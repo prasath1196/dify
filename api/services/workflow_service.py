@@ -32,7 +32,7 @@ from events.app_event import app_draft_workflow_was_synced, app_published_workfl
 from extensions.ext_database import db
 from extensions.ext_storage import storage
 from factories.file_factory import build_from_mapping, build_from_mappings
-from libs.datetime_utils import naive_utc_now
+from libs.datetime_utils import naive_utc_now, utc_timestamp
 from models import Account
 from models.model import App, AppMode
 from models.tools import WorkflowToolProvider
@@ -1051,7 +1051,7 @@ def _setup_variable_pool(
         system_variable = SystemVariable(
             user_id=user_id,
             app_id=workflow.app_id,
-            timestamp=int(naive_utc_now().timestamp()),
+            timestamp=int(utc_timestamp(naive_utc_now())),
             workflow_id=workflow.id,
             files=files or [],
             workflow_execution_id=str(uuid.uuid4()),

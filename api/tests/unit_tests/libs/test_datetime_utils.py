@@ -1,10 +1,11 @@
 import datetime
+import time
 from unittest.mock import patch
 
 import pytest
 import pytz
 
-from libs.datetime_utils import naive_utc_now, parse_time_range
+from libs.datetime_utils import naive_utc_now, parse_time_range, utc_timestamp
 
 
 def test_naive_utc_now(monkeypatch: pytest.MonkeyPatch):
@@ -266,3 +267,24 @@ class TestParseTimeRange:
         assert end is not None
         assert start.tzinfo == pytz.UTC
         assert end.tzinfo == pytz.UTC
+
+
+class TestUtcTimestamp:
+    @pytest.fixture
+    def non_utc_timezone(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("TZ", "Asia/Shanghai")
+        time.tzset()
+        yield
+        monkeypatch.undo()
+        time.tzset()
+
+    def test_naive_datetime_is_treated_as_utc(self, non_utc_timezone):
+        assert utc_timestamp(datetime.datetime(2025, 1, 1)) == 1735689600.0
+
+    def test_aware_datetime_keeps_its_offset(self, non_utc_timezone):
+        aware = datetime.datetime(2025, 1, 1, 8, tzinfo=datetime.timezone(datetime.timedelta(hours=8)))
+
+        assert utc_timestamp(aware) == 1735689600.0
+
+    def test_keeps_sub_second_precision(self):
+        assert utc_timestamp(datetime.datetime(2025, 1, 1, 0, 0, 0, 500000)) == 1735689600.5

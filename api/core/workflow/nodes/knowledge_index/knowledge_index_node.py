@@ -16,6 +16,7 @@ from core.workflow.nodes.base.node import Node
 from core.workflow.nodes.base.template import Template
 from core.workflow.runtime import VariablePool
 from extensions.ext_database import db
+from libs.datetime_utils import utc_timestamp
 from models.dataset import Dataset, Document, DocumentSegment
 
 from .entities import KnowledgeIndexNodeData
@@ -169,7 +170,7 @@ class KnowledgeIndexNode(Node[KnowledgeIndexNodeData]):
             "batch": batch.value,
             "document_id": doc_id_value,
             "document_name": document_name_value,
-            "created_at": created_at_value.timestamp(),
+            "created_at": utc_timestamp(created_at_value),
             "display_status": "completed",
         }
 

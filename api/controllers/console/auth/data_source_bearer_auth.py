@@ -1,6 +1,7 @@
 from flask_restx import Resource
 from pydantic import BaseModel, Field
 
+from libs.datetime_utils import utc_timestamp
 from libs.login import current_account_with_tenant, login_required
 from services.auth.api_key_auth_service import ApiKeyAuthService
 
@@ -39,8 +40,8 @@ class ApiKeyAuthDataSource(Resource):
                         "category": data_source_api_key_binding.category,
                         "provider": data_source_api_key_binding.provider,
                         "disabled": data_source_api_key_binding.disabled,
-                        "created_at": int(data_source_api_key_binding.created_at.timestamp()),
-                        "updated_at": int(data_source_api_key_binding.updated_at.timestamp()),
+                        "created_at": int(utc_timestamp(data_source_api_key_binding.created_at)),
+                        "updated_at": int(utc_timestamp(data_source_api_key_binding.updated_at)),
                     }
                     for data_source_api_key_binding in data_source_api_key_bindings
                 ]

@@ -11,7 +11,7 @@ from werkzeug.exceptions import NotFound
 from core.helper.csv_sanitizer import CSVSanitizer
 from extensions.ext_database import db
 from extensions.ext_redis import redis_client
-from libs.datetime_utils import naive_utc_now
+from libs.datetime_utils import naive_utc_now, utc_timestamp
 from libs.login import current_account_with_tenant
 from models.model import App, AppAnnotationHitHistory, AppAnnotationSetting, Message, MessageAnnotation
 from services.feature_service import FeatureService
@@ -457,7 +457,7 @@ class AppAnnotationService:
             indexing_cache_key = f"app_annotation_batch_import_{str(job_id)}"
 
             # Register job in active tasks list for concurrency tracking
-            current_time = int(naive_utc_now().timestamp() * 1000)
+            current_time = int(utc_timestamp(naive_utc_now()) * 1000)
             active_jobs_key = f"annotation_import_active:{current_tenant_id}"
             redis_client.zadd(active_jobs_key, {job_id: current_time})
             redis_client.expire(active_jobs_key, 7200)  # 2 hours TTL

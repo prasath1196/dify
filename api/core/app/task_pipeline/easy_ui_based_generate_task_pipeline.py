@@ -57,7 +57,7 @@ from core.prompt.utils.prompt_message_util import PromptMessageUtil
 from core.prompt.utils.prompt_template_parser import PromptTemplateParser
 from events.message_event import message_was_created
 from extensions.ext_database import db
-from libs.datetime_utils import naive_utc_now
+from libs.datetime_utils import naive_utc_now, utc_timestamp
 from models.model import AppMode, Conversation, Message, MessageAgentThought
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ class EasyUIBasedGenerateTaskPipeline(BasedGenerateTaskPipeline):
         self._conversation_mode = conversation.mode
 
         self._message_id = message.id
-        self._message_created_at = int(message.created_at.timestamp())
+        self._message_created_at = int(utc_timestamp(message.created_at))
 
         self._task_state = EasyUITaskState(
             llm_result=LLMResult(

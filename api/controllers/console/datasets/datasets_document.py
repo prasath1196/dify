@@ -36,7 +36,7 @@ from fields.document_fields import (
     document_status_fields,
     document_with_segments_fields,
 )
-from libs.datetime_utils import naive_utc_now
+from libs.datetime_utils import naive_utc_now, utc_timestamp
 from libs.login import current_account_with_tenant, login_required
 from models import DatasetProcessRule, Document, DocumentSegment, UploadFile
 from models.dataset import DocumentPipelineExecutionLog
@@ -763,15 +763,15 @@ class DocumentApi(DocumentResource):
                 "name": document.name,
                 "created_from": document.created_from,
                 "created_by": document.created_by,
-                "created_at": int(document.created_at.timestamp()),
+                "created_at": int(utc_timestamp(document.created_at)),
                 "tokens": document.tokens,
                 "indexing_status": document.indexing_status,
-                "completed_at": int(document.completed_at.timestamp()) if document.completed_at else None,
-                "updated_at": int(document.updated_at.timestamp()) if document.updated_at else None,
+                "completed_at": int(utc_timestamp(document.completed_at)) if document.completed_at else None,
+                "updated_at": int(utc_timestamp(document.updated_at)) if document.updated_at else None,
                 "indexing_latency": document.indexing_latency,
                 "error": document.error,
                 "enabled": document.enabled,
-                "disabled_at": int(document.disabled_at.timestamp()) if document.disabled_at else None,
+                "disabled_at": int(utc_timestamp(document.disabled_at)) if document.disabled_at else None,
                 "disabled_by": document.disabled_by,
                 "archived": document.archived,
                 "segment_count": document.segment_count,
@@ -796,15 +796,15 @@ class DocumentApi(DocumentResource):
                 "name": document.name,
                 "created_from": document.created_from,
                 "created_by": document.created_by,
-                "created_at": int(document.created_at.timestamp()),
+                "created_at": int(utc_timestamp(document.created_at)),
                 "tokens": document.tokens,
                 "indexing_status": document.indexing_status,
-                "completed_at": int(document.completed_at.timestamp()) if document.completed_at else None,
-                "updated_at": int(document.updated_at.timestamp()) if document.updated_at else None,
+                "completed_at": int(utc_timestamp(document.completed_at)) if document.completed_at else None,
+                "updated_at": int(utc_timestamp(document.updated_at)) if document.updated_at else None,
                 "indexing_latency": document.indexing_latency,
                 "error": document.error,
                 "enabled": document.enabled,
-                "disabled_at": int(document.disabled_at.timestamp()) if document.disabled_at else None,
+                "disabled_at": int(utc_timestamp(document.disabled_at)) if document.disabled_at else None,
                 "disabled_by": document.disabled_by,
                 "archived": document.archived,
                 "doc_type": document.doc_type,
