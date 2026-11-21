@@ -165,4 +165,7 @@ class TestClearFreePlanTenantExpiredLogs:
 
             ClearFreePlanTenantExpiredLogs._clear_message_related_tables(mock_session, "tenant-123", sample_message_ids)
 
-            pass
+        output = capsys.readouterr().out
+        assert "Processed 3 saved_messages records for tenant tenant-123" in output
+        assert output.count("Processed 3 ") == mock_storage.save.call_count
+        assert mock_storage.save.call_count > 0

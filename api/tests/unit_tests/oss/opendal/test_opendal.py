@@ -70,11 +70,13 @@ class TestOpenDAL:
     def test_download(self):
         """Test downloading data to a file."""
         filename = get_example_filename()
-        filepath = str(Path(get_opendal_bucket()) / filename)
         data = get_example_data()
 
         self.storage.save(filename, data)
-        self.storage.download(filename, filepath)
+        target_filepath = str(Path(get_opendal_bucket()) / f"downloaded-{filename}")
+        self.storage.download(filename, target_filepath)
+
+        assert Path(target_filepath).read_bytes() == data
 
     def test_delete(self):
         """Test deleting a file."""
