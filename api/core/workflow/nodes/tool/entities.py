@@ -19,14 +19,10 @@ class ToolEntity(BaseModel):
 
     @field_validator("tool_configurations", mode="before")
     @classmethod
-    def validate_tool_configurations(cls, value, values: ValidationInfo):
+    def validate_tool_configurations(cls, value: Any) -> dict[str, Any]:
+        # Values are not type-checked: selector parameters (e.g. model-selector) store dicts.
         if not isinstance(value, dict):
             raise ValueError("tool_configurations must be a dictionary")
-
-        for key in values.data.get("tool_configurations", {}):
-            value = values.data.get("tool_configurations", {}).get(key)
-            if not isinstance(value, str | int | float | bool):
-                raise ValueError(f"{key} must be a string")
 
         return value
 
