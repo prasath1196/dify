@@ -71,8 +71,8 @@ class LLMGenerator:
             response: LLMResult = model_instance.invoke_llm(
                 prompt_messages=list(prompts), model_parameters={"max_tokens": 500, "temperature": 1}, stream=False
             )
-        answer = cast(str, response.message.content)
-        if answer is None:
+        answer = response.message.get_text_content()
+        if not answer:
             return ""
         try:
             result_dict = json.loads(answer)
@@ -184,7 +184,7 @@ class LLMGenerator:
                     prompt_messages=list(prompt_messages), model_parameters=model_parameters, stream=False
                 )
 
-                rule_config["prompt"] = cast(str, response.message.content)
+                rule_config["prompt"] = response.message.get_text_content()
 
             except InvokeError as e:
                 error = str(e)
@@ -237,13 +237,12 @@ class LLMGenerator:
 
                 return rule_config
 
-            rule_config["prompt"] = cast(str, prompt_content.message.content)
+            prompt_text = prompt_content.message.get_text_content()
+            rule_config["prompt"] = prompt_text
 
-            if not isinstance(prompt_content.message.content, str):
-                raise NotImplementedError("prompt content is not a string")
             parameter_generate_prompt = parameter_template.format(
                 inputs={
-                    "INPUT_TEXT": prompt_content.message.content,
+                    "INPUT_TEXT": prompt_text,
                 },
                 remove_template_variables=False,
             )
@@ -253,7 +252,7 @@ class LLMGenerator:
             statement_generate_prompt = statement_template.format(
                 inputs={
                     "TASK_DESCRIPTION": instruction,
-                    "INPUT_TEXT": prompt_content.message.content,
+                    "INPUT_TEXT": prompt_text,
                 },
                 remove_template_variables=False,
             )
@@ -263,7 +262,7 @@ class LLMGenerator:
                 parameter_content: LLMResult = model_instance.invoke_llm(
                     prompt_messages=list(parameter_messages), model_parameters=model_parameters, stream=False
                 )
-                rule_config["variables"] = re.findall(r'"\s*([^"]+)\s*"', cast(str, parameter_content.message.content))
+                rule_config["variables"] = re.findall(r'"\s*([^"]+)\s*"', parameter_content.message.get_text_content())
             except InvokeError as e:
                 error = str(e)
                 error_step = "generate variables"
@@ -272,7 +271,7 @@ class LLMGenerator:
                 statement_content: LLMResult = model_instance.invoke_llm(
                     prompt_messages=list(statement_messages), model_parameters=model_parameters, stream=False
                 )
-                rule_config["opening_statement"] = cast(str, statement_content.message.content)
+                rule_config["opening_statement"] = statement_content.message.get_text_content()
             except InvokeError as e:
                 error = str(e)
                 error_step = "generate conversation opener"
@@ -315,7 +314,7 @@ class LLMGenerator:
                 prompt_messages=list(prompt_messages), model_parameters=model_parameters, stream=False
             )
 
-            generated_code = cast(str, response.message.content)
+            generated_code = response.message.get_text_content()
             return {"code": generated_code, "language": code_language, "error": ""}
 
         except InvokeError as e:
@@ -351,8 +350,7 @@ class LLMGenerator:
             raise TypeError("Expected LLMResult when stream=False")
         response = result
 
-        answer = cast(str, response.message.content)
-        return answer.strip()
+        return response.message.get_text_content().strip()
 
     @classmethod
     def generate_structured_output(cls, tenant_id: str, instruction: str, model_config: dict):
