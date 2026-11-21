@@ -26,7 +26,11 @@ from core.app.entities.task_entities import (
 from core.app.task_pipeline.easy_ui_based_generate_task_pipeline import EasyUIBasedGenerateTaskPipeline
 from core.base.tts import AppGeneratorTTSPublisher
 from core.model_runtime.entities.llm_entities import LLMResult as RuntimeLLMResult
-from core.model_runtime.entities.message_entities import TextPromptMessageContent
+from core.model_runtime.entities.message_entities import (
+    AssistantPromptMessage,
+    ImagePromptMessageContent,
+    TextPromptMessageContent,
+)
 from core.ops.ops_trace_manager import TraceQueueManager
 from models.model import AppMode
 
@@ -263,6 +267,24 @@ class TestEasyUIBasedGenerateTaskPipelineProcessStreamResponse:
         assert mock_task_state.llm_result == llm_result
         pipeline._save_message.assert_called_once()
         pipeline._message_end_to_stream_response.assert_called_once()
+
+    def test_message_end_event_with_list_content_moderates_text(self, pipeline):
+        image = ImagePromptMessageContent(url="https://example.com/a.png", format="png", mime_type="image/png")
+        llm_result = Mock(spec=RuntimeLLMResult)
+        llm_result.message = AssistantPromptMessage(content=[image, TextPromptMessageContent(data="Final response")])
+        message_end_event = Mock(spec=QueueMessageEndEvent)
+        message_end_event.llm_result = llm_result
+        pipeline.queue_manager.listen.return_value = [Mock(event=message_end_event)]
+        pipeline._save_message = Mock()
+        pipeline._message_end_to_stream_response = Mock(return_value=Mock(spec=MessageEndStreamResponse))
+        pipeline.handle_output_moderation_when_task_finished = Mock(return_value=None)
+
+        with patch(
+            "core.app.task_pipeline.easy_ui_based_generate_task_pipeline.db", new=SimpleNamespace(engine=Mock())
+        ):
+            list(pipeline._process_stream_response(publisher=None, trace_manager=None))
+
+        pipeline.handle_output_moderation_when_task_finished.assert_called_once_with("Final response")
 
     def test_error_event(self, pipeline):
         """Test handling of error events."""
