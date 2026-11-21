@@ -10,6 +10,14 @@ from core.model_runtime.entities.message_entities import (
 from core.model_runtime.utils.encoders import jsonable_encoder
 
 
+def _text_content(message: PromptMessage) -> str:
+    if isinstance(message.content, str):
+        return message.content
+    if isinstance(message.content, list):
+        return "".join(content.data for content in message.content if isinstance(content, TextPromptMessageContent))
+    return ""
+
+
 class CotCompletionAgentRunner(CotAgentRunner):
     def _organize_instruction_prompt(self) -> str:
         """
@@ -39,15 +47,9 @@ class CotCompletionAgentRunner(CotAgentRunner):
 
         for message in historic_prompt_messages:
             if isinstance(message, UserPromptMessage):
-                historic_prompt += f"Question: {message.content}\n\n"
-            elif isinstance(message, AssistantPromptMessage):
-                if isinstance(message.content, str):
-                    historic_prompt += message.content + "\n\n"
-                elif isinstance(message.content, list):
-                    for content in message.content:
-                        if not isinstance(content, TextPromptMessageContent):
-                            continue
-                        historic_prompt += content.data
+                historic_prompt += f"Question: {_text_content(message)}\n\n"
+            elif isinstance(message, AssistantPromptMessage) and message.content is not None:
+                historic_prompt += f"{_text_content(message)}\n\n"
 
         return historic_prompt
 
