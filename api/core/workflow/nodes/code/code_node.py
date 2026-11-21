@@ -1,3 +1,4 @@
+import math
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Any, cast
@@ -108,6 +109,9 @@ class CodeNode(Node[CodeNodeData]):
         """
         if value is None:
             return None
+
+        if isinstance(value, float) and not math.isfinite(value):
+            raise OutputValidationError(f"Output variable `{variable}` must be a finite number, got {value}.")
 
         if value > dify_config.CODE_MAX_NUMBER or value < dify_config.CODE_MIN_NUMBER:
             raise OutputValidationError(

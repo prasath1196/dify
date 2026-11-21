@@ -1,3 +1,5 @@
+import pytest
+
 from core.helper.code_executor.code_executor import CodeLanguage
 from core.variables.types import SegmentType
 from core.workflow.nodes.code.code_node import CodeNode
@@ -194,6 +196,13 @@ class TestCodeNodeCheckMethods:
         result = node._check_number(-3.14159, "test_var")
 
         assert result == -3.14159
+
+    @pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+    def test_check_number_rejects_non_finite_floats(self, value: float):
+        node = CodeNode.__new__(CodeNode)
+
+        with pytest.raises(OutputValidationError, match="result"):
+            node._check_number(value, "result")
 
 
 class TestCodeNodeConvertBooleanToInt:
