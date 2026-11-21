@@ -22,11 +22,8 @@ class ModelConfigManager:
         if not model_config:
             raise ValueError("model is required")
 
-        completion_params = model_config.get("completion_params")
-        stop = []
-        if "stop" in completion_params:
-            stop = completion_params["stop"]
-            del completion_params["stop"]
+        completion_params = dict(model_config.get("completion_params") or {})
+        stop = completion_params.pop("stop", [])
 
         # get model mode
         model_mode = model_config.get("mode")
