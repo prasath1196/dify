@@ -14,7 +14,7 @@ from controllers.console.wraps import (
     setup_required,
 )
 from extensions.ext_database import db
-from libs.login import login_required
+from libs.login import current_account_with_tenant, login_required
 from models.dataset import PipelineCustomizedTemplate
 from services.entities.knowledge_entities.rag_pipeline_entities import PipelineTemplateInfoEntity
 from services.rag_pipeline.rag_pipeline import RagPipelineService
@@ -83,9 +83,15 @@ class CustomizedPipelineTemplateApi(Resource):
     @account_initialization_required
     @enterprise_license_required
     def post(self, template_id: str):
+        _, current_tenant_id = current_account_with_tenant()
         with Session(db.engine) as session:
             template = (
-                session.query(PipelineCustomizedTemplate).where(PipelineCustomizedTemplate.id == template_id).first()
+                session.query(PipelineCustomizedTemplate)
+                .where(
+                    PipelineCustomizedTemplate.id == template_id,
+                    PipelineCustomizedTemplate.tenant_id == current_tenant_id,
+                )
+                .first()
             )
             if not template:
                 raise ValueError("Customized pipeline template not found.")
