@@ -8,7 +8,7 @@ import subprocess
 import time
 import uuid
 from collections.abc import Generator, Mapping
-from datetime import datetime
+from datetime import UTC, datetime
 from hashlib import sha256
 from typing import TYPE_CHECKING, Annotated, Any, Optional, Union, cast
 from uuid import UUID
@@ -91,6 +91,9 @@ class AvatarUrlField(fields.Raw):
 
 class TimestampField(fields.Raw):
     def format(self, value) -> int:
+        # Naive datetimes in Dify are UTC; don't let timestamp() read them as server-local time.
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
         return int(value.timestamp())
 
 

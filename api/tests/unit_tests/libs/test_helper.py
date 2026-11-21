@@ -1,6 +1,9 @@
+import time
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
-from libs.helper import extract_tenant_id
+from libs.helper import TimestampField, extract_tenant_id
 from models.account import Account
 from models.model import EndUser
 
@@ -63,3 +66,21 @@ class TestExtractTenantId:
 
         with pytest.raises(ValueError, match="Invalid user type.*Expected Account or EndUser"):
             extract_tenant_id(dict_user)
+
+
+class TestTimestampField:
+    @pytest.fixture
+    def non_utc_timezone(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("TZ", "Asia/Shanghai")
+        time.tzset()
+        yield
+        monkeypatch.undo()
+        time.tzset()
+
+    def test_naive_datetime_is_treated_as_utc(self, non_utc_timezone):
+        assert TimestampField().format(datetime(2025, 1, 1, 0, 0, 0)) == 1735689600
+
+    def test_aware_datetime_keeps_its_offset(self, non_utc_timezone):
+        aware = datetime(2025, 1, 1, 8, 0, 0, tzinfo=timezone(timedelta(hours=8)))
+
+        assert TimestampField().format(aware) == 1735689600
