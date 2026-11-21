@@ -122,7 +122,8 @@ from core.rag.datasource.vdb.vector_base import BaseVector
 from core.rag.datasource.vdb.vector_factory import Vector
 from core.rag.datasource.vdb.vector_type import VectorType
 from core.rag.models.document import Document
-from models.dataset import ChildChunk, Dataset, DatasetDocument, DatasetProcessRule, DocumentSegment
+from models.dataset import ChildChunk, Dataset, DatasetProcessRule, DocumentSegment
+from models.dataset import Document as DatasetDocument
 from services.vector_service import VectorService
 
 # ============================================================================

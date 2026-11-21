@@ -62,8 +62,8 @@ class MetadataService:
         for field in BuiltInField:
             if field.value == name:
                 raise ValueError("Metadata name already exists in Built-in fields.")
+        MetadataService.knowledge_base_metadata_lock_check(dataset_id, None)
         try:
-            MetadataService.knowledge_base_metadata_lock_check(dataset_id, None)
             metadata = db.session.query(DatasetMetadata).filter_by(id=metadata_id).first()
             if metadata is None:
                 raise ValueError("Metadata not found.")
@@ -91,15 +91,17 @@ class MetadataService:
             db.session.commit()
             return metadata
         except Exception:
+            db.session.rollback()
             logger.exception("Update metadata name failed")
+            raise
         finally:
             redis_client.delete(lock_key)
 
     @staticmethod
     def delete_metadata(dataset_id: str, metadata_id: str):
         lock_key = f"dataset_metadata_lock_{dataset_id}"
+        MetadataService.knowledge_base_metadata_lock_check(dataset_id, None)
         try:
-            MetadataService.knowledge_base_metadata_lock_check(dataset_id, None)
             metadata = db.session.query(DatasetMetadata).filter_by(id=metadata_id).first()
             if metadata is None:
                 raise ValueError("Metadata not found.")
@@ -123,7 +125,9 @@ class MetadataService:
             db.session.commit()
             return metadata
         except Exception:
+            db.session.rollback()
             logger.exception("Delete metadata failed")
+            raise
         finally:
             redis_client.delete(lock_key)
 
@@ -142,8 +146,8 @@ class MetadataService:
         if dataset.built_in_field_enabled:
             return
         lock_key = f"dataset_metadata_lock_{dataset.id}"
+        MetadataService.knowledge_base_metadata_lock_check(dataset.id, None)
         try:
-            MetadataService.knowledge_base_metadata_lock_check(dataset.id, None)
             db.session.add(dataset)
             documents = DocumentService.get_working_documents_by_dataset_id(dataset.id)
             if documents:
@@ -162,7 +166,9 @@ class MetadataService:
             dataset.built_in_field_enabled = True
             db.session.commit()
         except Exception:
+            db.session.rollback()
             logger.exception("Enable built-in field failed")
+            raise
         finally:
             redis_client.delete(lock_key)
 
@@ -171,8 +177,8 @@ class MetadataService:
         if not dataset.built_in_field_enabled:
             return
         lock_key = f"dataset_metadata_lock_{dataset.id}"
+        MetadataService.knowledge_base_metadata_lock_check(dataset.id, None)
         try:
-            MetadataService.knowledge_base_metadata_lock_check(dataset.id, None)
             db.session.add(dataset)
             documents = DocumentService.get_working_documents_by_dataset_id(dataset.id)
             document_ids = []
@@ -193,7 +199,9 @@ class MetadataService:
             dataset.built_in_field_enabled = False
             db.session.commit()
         except Exception:
+            db.session.rollback()
             logger.exception("Disable built-in field failed")
+            raise
         finally:
             redis_client.delete(lock_key)
 
@@ -201,8 +209,8 @@ class MetadataService:
     def update_documents_metadata(dataset: Dataset, metadata_args: MetadataOperationData):
         for operation in metadata_args.operation_data:
             lock_key = f"document_metadata_lock_{operation.document_id}"
+            MetadataService.knowledge_base_metadata_lock_check(None, operation.document_id)
             try:
-                MetadataService.knowledge_base_metadata_lock_check(None, operation.document_id)
                 document = DocumentService.get_document(dataset.id, operation.document_id)
                 if document is None:
                     raise ValueError("Document not found.")
@@ -247,6 +255,7 @@ class MetadataService:
                     db.session.add(dataset_metadata_binding)
                 db.session.commit()
             except Exception:
+                db.session.rollback()
                 logger.exception("Update documents metadata failed")
             finally:
                 redis_client.delete(lock_key)
@@ -255,14 +264,12 @@ class MetadataService:
     def knowledge_base_metadata_lock_check(dataset_id: str | None, document_id: str | None):
         if dataset_id:
             lock_key = f"dataset_metadata_lock_{dataset_id}"
-            if redis_client.get(lock_key):
+            if not redis_client.set(lock_key, 1, ex=3600, nx=True):
                 raise ValueError("Another knowledge base metadata operation is running, please wait a moment.")
-            redis_client.set(lock_key, 1, ex=3600)
         if document_id:
             lock_key = f"document_metadata_lock_{document_id}"
-            if redis_client.get(lock_key):
+            if not redis_client.set(lock_key, 1, ex=3600, nx=True):
                 raise ValueError("Another document metadata operation is running, please wait a moment.")
-            redis_client.set(lock_key, 1, ex=3600)
 
     @staticmethod
     def get_dataset_metadatas(dataset: Dataset):

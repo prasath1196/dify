@@ -92,7 +92,7 @@ from core.rag.index_processor.constant.built_in_field import BuiltInField
 from models.dataset import Dataset, DatasetMetadata, DatasetMetadataBinding
 from services.entities.knowledge_entities.knowledge_entities import (
     MetadataArgs,
-    MetadataValue,
+    MetadataDetail,
 )
 from services.metadata_service import MetadataService
 
@@ -308,7 +308,7 @@ class MetadataTestDataFactory:
         value: str = "test",
     ) -> Mock:
         """
-        Create a mock MetadataValue entity.
+        Create a mock MetadataDetail entity.
 
         Args:
             metadata_id: ID of the metadata field
@@ -316,9 +316,9 @@ class MetadataTestDataFactory:
             value: Value of the metadata
 
         Returns:
-            Mock object configured as a MetadataValue instance
+            Mock object configured as a MetadataDetail instance
         """
-        metadata_value = Mock(spec=MetadataValue)
+        metadata_value = Mock(spec=MetadataDetail)
         metadata_value.id = metadata_id
         metadata_value.name = name
         metadata_value.value = value
@@ -603,21 +603,24 @@ class TestMetadataServiceUpdateMetadataName:
         mock_query.first.return_value = None
         mock_db_session.query.return_value = mock_query
 
-        # Mock metadata retrieval
-        def query_side_effect(model):
-            if model == DatasetMetadata:
-                mock_meta_query = Mock()
-                mock_meta_query.filter_by.return_value = mock_meta_query
-                mock_meta_query.first.return_value = existing_metadata
-                return mock_meta_query
-            return mock_query
-
-        mock_db_session.query.side_effect = query_side_effect
-
         # Mock no metadata bindings (no documents to update)
         mock_binding_query = Mock()
         mock_binding_query.filter_by.return_value = mock_binding_query
         mock_binding_query.all.return_value = []
+
+        # The duplicate-name lookup (by name) finds nothing; the lookup by id finds the metadata
+        def query_side_effect(model):
+            if model == DatasetMetadata:
+                mock_meta_query = Mock()
+                mock_meta_query.filter_by.side_effect = lambda **kwargs: Mock(
+                    first=Mock(return_value=None if "name" in kwargs else existing_metadata)
+                )
+                return mock_meta_query
+            if model == DatasetMetadataBinding:
+                return mock_binding_query
+            return mock_query
+
+        mock_db_session.query.side_effect = query_side_effect
 
         # Mock BuiltInField enum
         with patch("services.metadata_service.BuiltInField") as mock_builtin:
@@ -631,7 +634,6 @@ class TestMetadataServiceUpdateMetadataName:
         assert result.name == new_name
 
         # Verify lock was acquired and released
-        mock_redis_client.get.assert_called()
         mock_redis_client.set.assert_called()
         mock_redis_client.delete.assert_called()
 
@@ -755,6 +757,9 @@ class TestMetadataServiceDeleteMetadata:
         mock_binding_query = Mock()
         mock_binding_query.filter_by.return_value = mock_binding_query
         mock_binding_query.all.return_value = []
+        mock_db_session.query.side_effect = lambda model: (
+            mock_binding_query if model == DatasetMetadataBinding else mock_query
+        )
 
         # Act
         result = MetadataService.delete_metadata(dataset_id, metadata_id)
@@ -763,7 +768,6 @@ class TestMetadataServiceDeleteMetadata:
         assert result == existing_metadata
 
         # Verify lock was acquired and released
-        mock_redis_client.get.assert_called()
         mock_redis_client.set.assert_called()
         mock_redis_client.delete.assert_called()
 
@@ -901,14 +905,13 @@ class TestMetadataServiceLockCheck:
         """
         # Arrange
         dataset_id = "dataset-123"
-        mock_redis_client.get.return_value = None  # No existing lock
+        mock_redis_client.set.return_value = True  # SET NX acquired the lock
 
         # Act (should not raise)
         MetadataService.knowledge_base_metadata_lock_check(dataset_id, None)
 
         # Assert
-        mock_redis_client.get.assert_called_once_with(f"dataset_metadata_lock_{dataset_id}")
-        mock_redis_client.set.assert_called_once_with(f"dataset_metadata_lock_{dataset_id}", 1, ex=3600)
+        mock_redis_client.set.assert_called_once_with(f"dataset_metadata_lock_{dataset_id}", 1, ex=3600, nx=True)
 
     def test_lock_check_dataset_conflict_error(self, mock_redis_client):
         """
@@ -924,15 +927,15 @@ class TestMetadataServiceLockCheck:
         """
         # Arrange
         dataset_id = "dataset-123"
-        mock_redis_client.get.return_value = "1"  # Lock exists
+        mock_redis_client.set.return_value = None  # SET NX failed: lock already held
 
         # Act & Assert
         with pytest.raises(ValueError, match="Another knowledge base metadata operation is running"):
             MetadataService.knowledge_base_metadata_lock_check(dataset_id, None)
 
-        # Verify lock was checked but not set
-        mock_redis_client.get.assert_called_once()
-        mock_redis_client.set.assert_not_called()
+        # Verify the lock was attempted once and never released
+        mock_redis_client.set.assert_called_once()
+        mock_redis_client.delete.assert_not_called()
 
     def test_lock_check_document_success(self, mock_redis_client):
         """
@@ -948,14 +951,13 @@ class TestMetadataServiceLockCheck:
         """
         # Arrange
         document_id = "document-123"
-        mock_redis_client.get.return_value = None  # No existing lock
+        mock_redis_client.set.return_value = True  # SET NX acquired the lock
 
         # Act (should not raise)
         MetadataService.knowledge_base_metadata_lock_check(None, document_id)
 
         # Assert
-        mock_redis_client.get.assert_called_once_with(f"document_metadata_lock_{document_id}")
-        mock_redis_client.set.assert_called_once_with(f"document_metadata_lock_{document_id}", 1, ex=3600)
+        mock_redis_client.set.assert_called_once_with(f"document_metadata_lock_{document_id}", 1, ex=3600, nx=True)
 
 
 # ============================================================================
