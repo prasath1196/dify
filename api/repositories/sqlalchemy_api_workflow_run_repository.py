@@ -34,7 +34,7 @@ from sqlalchemy.orm import Session, selectinload, sessionmaker
 from core.workflow.entities.pause_reason import HumanInputRequired, PauseReason, SchedulingPause
 from core.workflow.enums import WorkflowExecutionStatus
 from extensions.ext_storage import storage
-from libs.datetime_utils import naive_utc_now
+from libs.datetime_utils import ensure_naive_utc, naive_utc_now
 from libs.helper import convert_datetime_to_date
 from libs.infinite_scroll_pagination import InfiniteScrollPagination
 from libs.time_parser import get_time_threshold
@@ -195,7 +195,8 @@ class DifyAPISQLAlchemyWorkflowRunRepository(APIWorkflowRunRepository):
             if time_range:
                 time_threshold = get_time_threshold(time_range)
                 if time_threshold:
-                    base_conditions.append(WorkflowRun.created_at >= time_threshold)
+                    # created_at is naive UTC; compare like with like instead of relying on the DB session timezone.
+                    base_conditions.append(WorkflowRun.created_at >= ensure_naive_utc(time_threshold))
 
             # If status filter is provided, return simple count
             if status:
