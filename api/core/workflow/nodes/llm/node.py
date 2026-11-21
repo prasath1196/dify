@@ -439,7 +439,6 @@ class LLMNode(Node[LLMNodeData]):
 
         # For streaming mode
         model = ""
-        prompt_messages: list[PromptMessage] = []
 
         usage = LLMUsage.empty_usage()
         finish_reason = None
@@ -481,10 +480,6 @@ class LLMNode(Node[LLMNodeData]):
                     # Update the whole metadata
                     if not model and result.model:
                         model = result.model
-                    if len(prompt_messages) == 0:
-                        # TODO(QuantumGhost): it seems that this update has no visable effect.
-                        # What's the purpose of the line below?
-                        prompt_messages = list(result.prompt_messages)
                     if usage.prompt_tokens == 0 and result.delta.usage:
                         usage = result.delta.usage
                     if finish_reason is None and result.delta.finish_reason:
