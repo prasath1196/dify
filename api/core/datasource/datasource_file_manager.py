@@ -4,7 +4,6 @@ import hmac
 import logging
 import os
 import time
-from datetime import datetime
 from mimetypes import guess_extension, guess_type
 from typing import Union
 from uuid import uuid4
@@ -15,6 +14,7 @@ from configs import dify_config
 from core.helper import ssrf_proxy
 from extensions.ext_database import db
 from extensions.ext_storage import storage
+from libs.datetime_utils import naive_utc_now
 from models.enums import CreatorUserRole
 from models.model import MessageFile, UploadFile
 from models.tools import ToolFile
@@ -92,7 +92,7 @@ class DatasourceFileManager:
             used=False,
             hash=hashlib.sha3_256(file_binary).hexdigest(),
             source_url="",
-            created_at=datetime.now(),
+            created_at=naive_utc_now(),
         )
 
         db.session.add(upload_file)

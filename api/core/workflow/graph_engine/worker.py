@@ -10,7 +10,6 @@ import queue
 import threading
 import time
 from collections.abc import Sequence
-from datetime import datetime
 from typing import final
 from uuid import uuid4
 
@@ -21,6 +20,7 @@ from core.workflow.graph import Graph
 from core.workflow.graph_engine.layers.base import GraphEngineLayer
 from core.workflow.graph_events import GraphNodeEventBase, NodeRunFailedEvent
 from core.workflow.nodes.base.node import Node
+from libs.datetime_utils import naive_utc_now
 from libs.flask_utils import preserve_flask_contexts
 
 from .ready_queue import ReadyQueue
@@ -116,7 +116,7 @@ class Worker(threading.Thread):
                     node_type=node.node_type,
                     in_iteration_id=None,
                     error=str(e),
-                    start_at=datetime.now(),
+                    start_at=naive_utc_now(),
                 )
                 self._event_queue.put(error_event)
 
