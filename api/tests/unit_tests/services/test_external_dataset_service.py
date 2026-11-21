@@ -1538,7 +1538,7 @@ class TestExternalDatasetServiceCreateDataset:
         mock_query.filter_by.return_value = mock_query
         mock_query.first.return_value = existing_dataset
 
-        args = {"name": "Duplicate Dataset"}
+        args = {"name": "Duplicate Dataset", "external_knowledge_api_id": "api-123", "external_knowledge_id": "k-1"}
 
         # Act & Assert
         with pytest.raises(DatasetNameDuplicateError):
@@ -1566,7 +1566,7 @@ class TestExternalDatasetServiceCreateDataset:
         mock_api_query.filter_by.return_value = mock_api_query
         mock_api_query.first.return_value = None
 
-        args = {"name": "Test Dataset", "external_knowledge_api_id": "nonexistent-api"}
+        args = {"name": "Test Dataset", "external_knowledge_api_id": "nonexistent-api", "external_knowledge_id": "k-1"}
 
         # Act & Assert
         with pytest.raises(ValueError, match="api template not found"):

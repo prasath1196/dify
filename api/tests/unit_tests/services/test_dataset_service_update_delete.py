@@ -1073,9 +1073,10 @@ class TestDatasetServiceUpdateRagPipelineDatasetSettings:
         mock_session.merge.return_value = dataset
 
         # Act
-        DatasetService.update_rag_pipeline_dataset_settings(
-            mock_session, dataset, knowledge_config, has_published=False
-        )
+        with patch.object(DatasetService, "check_is_multimodal_model", return_value=False):
+            DatasetService.update_rag_pipeline_dataset_settings(
+                mock_session, dataset, knowledge_config, has_published=False
+            )
 
         # Assert
         assert dataset.chunk_structure == "list"

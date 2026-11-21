@@ -890,9 +890,9 @@ class TestExternalDatasetServiceFetchExternalKnowledgeRetrieval:
                 metadata_condition=None,
             )
 
-    def test_fetch_external_knowledge_retrieval_non_200_status_returns_empty_list(self, mock_db_session: MagicMock):
+    def test_fetch_external_knowledge_retrieval_non_200_status_raises(self, mock_db_session: MagicMock):
         """
-        Non‑200 responses should be treated as an empty result set.
+        Non-200 responses surface the external API's error text.
         """
 
         binding = ExternalDatasetTestDataFactory.create_external_binding()
@@ -906,15 +906,14 @@ class TestExternalDatasetServiceFetchExternalKnowledgeRetrieval:
 
         fake_response = Mock(spec=httpx.Response)
         fake_response.status_code = 500
-        fake_response.json.return_value = {}
+        fake_response.text = "upstream unavailable"
 
         with patch.object(ExternalDatasetService, "process_external_api", return_value=fake_response):
-            result = ExternalDatasetService.fetch_external_knowledge_retrieval(
-                tenant_id="tenant-1",
-                dataset_id="ds-1",
-                query="q",
-                external_retrieval_parameters={},
-                metadata_condition=None,
-            )
-
-        assert result == []
+            with pytest.raises(ValueError, match="upstream unavailable"):
+                ExternalDatasetService.fetch_external_knowledge_retrieval(
+                    tenant_id="tenant-1",
+                    dataset_id="ds-1",
+                    query="q",
+                    external_retrieval_parameters={},
+                    metadata_condition=None,
+                )

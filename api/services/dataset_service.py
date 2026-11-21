@@ -2395,11 +2395,11 @@ class DocumentService:
         if not knowledge_config.data_source:
             raise ValueError("Data source is required")
 
-        if knowledge_config.data_source.info_list.data_source_type not in Document.DATA_SOURCES:
-            raise ValueError("Data source type is invalid")
-
         if not knowledge_config.data_source.info_list:
             raise ValueError("Data source info is required")
+
+        if knowledge_config.data_source.info_list.data_source_type not in Document.DATA_SOURCES:
+            raise ValueError("Data source type is invalid")
 
         if knowledge_config.data_source.info_list.data_source_type == "upload_file":
             if not knowledge_config.data_source.info_list.file_info_list:

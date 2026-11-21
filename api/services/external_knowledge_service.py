@@ -234,6 +234,11 @@ class ExternalDatasetService:
 
     @staticmethod
     def create_external_dataset(tenant_id: str, user_id: str, args: dict) -> Dataset:
+        if args.get("external_knowledge_id") is None:
+            raise ValueError("external_knowledge_id is required")
+        if args.get("external_knowledge_api_id") is None:
+            raise ValueError("external_knowledge_api_id is required")
+
         # check if dataset name already exists
         if db.session.query(Dataset).filter_by(name=args.get("name"), tenant_id=tenant_id).first():
             raise DatasetNameDuplicateError(f"Dataset with name {args.get('name')} already exists.")
@@ -257,10 +262,6 @@ class ExternalDatasetService:
 
         db.session.add(dataset)
         db.session.flush()
-        if args.get("external_knowledge_id") is None:
-            raise ValueError("external_knowledge_id is required")
-        if args.get("external_knowledge_api_id") is None:
-            raise ValueError("external_knowledge_api_id is required")
 
         external_knowledge_binding = ExternalKnowledgeBindings(
             tenant_id=tenant_id,
