@@ -5,14 +5,18 @@ Tests rate limiting, concurrency control, file validation, and other
 security features added to prevent DoS attacks on the annotation import endpoint.
 """
 
+import inspect
 import io
 from unittest.mock import MagicMock, patch
 
 import pytest
+from flask import Flask
 from pandas.errors import ParserError
 from werkzeug.datastructures import FileStorage
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from configs import dify_config
+from controllers.console.app.annotation import AnnotationBatchImportApi
 
 
 class TestAnnotationImportRateLimiting:
@@ -157,32 +161,49 @@ class TestAnnotationImportConcurrencyControl:
 
 
 class TestAnnotationImportFileValidation:
-    """Test file validation in annotation import."""
+    """Test file validation in the annotation batch import endpoint."""
+
+    @staticmethod
+    def _post(content: bytes, filename: str):
+        app = Flask(__name__)
+        with (
+            app.test_request_context(
+                "/apps/app-1/annotations/batch-import",
+                method="POST",
+                data={"file": (io.BytesIO(content), filename)},
+                content_type="multipart/form-data",
+            ),
+            patch(
+                "controllers.console.app.annotation.AppAnnotationService.batch_import_app_annotations",
+                return_value={"job_id": "job-1"},
+            ) as batch_import,
+        ):
+            result = inspect.unwrap(AnnotationBatchImportApi.post)(AnnotationBatchImportApi(), "app-1")
+        return result, batch_import
 
     def test_file_size_limit_enforced(self):
         """Test that files exceeding size limit are rejected."""
-        # Create a file larger than the limit
-        max_size = dify_config.ANNOTATION_IMPORT_FILE_SIZE_LIMIT * 1024 * 1024
-        large_content = b"x" * (max_size + 1024)  # Exceed by 1KB
-
-        file = FileStorage(stream=io.BytesIO(large_content), filename="test.csv", content_type="text/csv")
-
-        # Should be rejected in controller
-        # This would be tested in integration tests with actual endpoint
+        with patch.object(dify_config, "ANNOTATION_IMPORT_FILE_SIZE_LIMIT", 1):
+            with pytest.raises(RequestEntityTooLarge):
+                self._post(b"x" * (1024 * 1024 + 1024), "test.csv")
 
     def test_empty_file_rejected(self):
         """Test that empty files are rejected."""
-        file = FileStorage(stream=io.BytesIO(b""), filename="test.csv", content_type="text/csv")
-
-        # Should be rejected
-        # This would be tested in integration tests
+        with pytest.raises(ValueError, match="empty"):
+            self._post(b"", "test.csv")
 
     def test_non_csv_file_rejected(self):
         """Test that non-CSV files are rejected."""
-        file = FileStorage(stream=io.BytesIO(b"test"), filename="test.txt", content_type="text/plain")
+        with pytest.raises(ValueError, match="Only CSV files are allowed"):
+            self._post(b"question,answer\nq,a\n", "test.txt")
 
-        # Should be rejected based on extension
-        # This would be tested in integration tests
+    def test_valid_csv_is_passed_to_import_service(self):
+        """Test that a small CSV file is handed to the import service."""
+        result, batch_import = self._post(b"question,answer\nq,a\n", "annotations.csv")
+
+        assert result == {"job_id": "job-1"}
+        batch_import.assert_called_once()
+        assert batch_import.call_args.args[0] == "app-1"
 
 
 class TestAnnotationImportServiceValidation:
