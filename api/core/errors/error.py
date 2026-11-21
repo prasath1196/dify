@@ -46,9 +46,3 @@ class ModelCurrentlyNotSupportError(ValueError):
     """
 
     description = "Model Currently Not Support"
-
-
-class InvokeRateLimitError(ValueError):
-    """Raised when the Invoke returns rate limit error."""
-
-    description = "Rate Limit Error"
