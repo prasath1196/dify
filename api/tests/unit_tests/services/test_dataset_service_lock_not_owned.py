@@ -302,3 +302,20 @@ def test_create_segment_commits_new_segment_while_holding_the_position_lock(monk
     added_segment = db_mock.session.add.call_args_list[0].args[0]
     assert added_segment.position == 4
     assert lock_held_at_commit[0] is True
+
+
+def test_create_child_chunk_returns_chunk_when_lock_expires_before_release(
+    monkeypatch, fake_current_user, expired_on_release_lock
+):
+    dataset, document = _economy_qa_dataset_and_document(fake_current_user)
+    segment = Mock(id="segment-1")
+    db_mock = Mock()
+    db_mock.session.query.return_value.where.return_value.scalar.return_value = None
+    monkeypatch.setattr("services.dataset_service.db", db_mock)
+    monkeypatch.setattr("services.dataset_service.VectorService", Mock())
+
+    child_chunk = SegmentService.create_child_chunk("child text", segment, document, dataset)
+
+    assert child_chunk.content == "child text"
+    assert child_chunk.position == 1
+    db_mock.session.commit.assert_called_once()

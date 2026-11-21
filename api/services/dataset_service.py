@@ -3270,43 +3270,50 @@ class SegmentService:
         assert isinstance(current_user, Account)
 
         lock_name = f"add_child_lock_{segment.id}"
-        with redis_client.lock(lock_name, timeout=20):
-            index_node_id = str(uuid.uuid4())
-            index_node_hash = helper.generate_text_hash(content)
-            max_position = (
-                db.session.query(func.max(ChildChunk.position))
-                .where(
-                    ChildChunk.tenant_id == current_user.current_tenant_id,
-                    ChildChunk.dataset_id == dataset.id,
-                    ChildChunk.document_id == document.id,
-                    ChildChunk.segment_id == segment.id,
+        committed_chunk: ChildChunk | None = None
+        try:
+            with redis_client.lock(lock_name, timeout=20):
+                index_node_id = str(uuid.uuid4())
+                index_node_hash = helper.generate_text_hash(content)
+                max_position = (
+                    db.session.query(func.max(ChildChunk.position))
+                    .where(
+                        ChildChunk.tenant_id == current_user.current_tenant_id,
+                        ChildChunk.dataset_id == dataset.id,
+                        ChildChunk.document_id == document.id,
+                        ChildChunk.segment_id == segment.id,
+                    )
+                    .scalar()
                 )
-                .scalar()
-            )
-            child_chunk = ChildChunk(
-                tenant_id=current_user.current_tenant_id,
-                dataset_id=dataset.id,
-                document_id=document.id,
-                segment_id=segment.id,
-                position=max_position + 1 if max_position else 1,
-                index_node_id=index_node_id,
-                index_node_hash=index_node_hash,
-                content=content,
-                word_count=len(content),
-                type="customized",
-                created_by=current_user.id,
-            )
-            db.session.add(child_chunk)
-            # save vector index
-            try:
-                VectorService.create_child_chunk_vector(child_chunk, dataset)
-            except Exception as e:
-                logger.exception("create child chunk index failed")
-                db.session.rollback()
-                raise ChildChunkIndexingError(str(e))
-            db.session.commit()
-
-            return child_chunk
+                child_chunk = ChildChunk(
+                    tenant_id=current_user.current_tenant_id,
+                    dataset_id=dataset.id,
+                    document_id=document.id,
+                    segment_id=segment.id,
+                    position=max_position + 1 if max_position else 1,
+                    index_node_id=index_node_id,
+                    index_node_hash=index_node_hash,
+                    content=content,
+                    word_count=len(content),
+                    type="customized",
+                    created_by=current_user.id,
+                )
+                db.session.add(child_chunk)
+                # save vector index
+                try:
+                    VectorService.create_child_chunk_vector(child_chunk, dataset)
+                except Exception as e:
+                    logger.exception("create child chunk index failed")
+                    db.session.rollback()
+                    raise ChildChunkIndexingError(str(e))
+                db.session.commit()
+                committed_chunk = child_chunk
+        except LockNotOwnedError:
+            # The lock expired before release (e.g. slow embedding); the chunk is already committed.
+            if committed_chunk is None:
+                raise
+        assert committed_chunk is not None
+        return committed_chunk
 
     @classmethod
     def update_child_chunks(
