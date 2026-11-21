@@ -1,13 +1,13 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from core.workflow.graph_engine.entities.graph import Graph
-from core.workflow.graph_engine.entities.graph_init_params import GraphInitParams
-from core.workflow.graph_engine.entities.graph_runtime_state import GraphRuntimeState
 
 from core.helper.code_executor.code_executor import CodeExecutionError
+from core.workflow.entities import GraphInitParams
 from core.workflow.enums import ErrorStrategy, NodeType, WorkflowNodeExecutionStatus
+from core.workflow.graph import Graph
 from core.workflow.nodes.template_transform.template_transform_node import TemplateTransformNode
+from core.workflow.runtime import GraphRuntimeState
 from models.workflow import WorkflowType
 
 
@@ -37,8 +37,8 @@ class TestTemplateTransformNode:
             workflow_id="test_workflow",
             graph_config={},
             user_id="test_user",
-            user_from="test",
-            invoke_from="test",
+            user_from="account",
+            invoke_from="debugger",
             call_depth=0,
         )
 
@@ -59,9 +59,8 @@ class TestTemplateTransformNode:
         """Test that TemplateTransformNode initializes correctly."""
         node = TemplateTransformNode(
             id="test_node",
-            config=basic_node_data,
+            config={"id": "test", "data": basic_node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -74,9 +73,8 @@ class TestTemplateTransformNode:
         """Test _get_title method."""
         node = TemplateTransformNode(
             id="test_node",
-            config=basic_node_data,
+            config={"id": "test", "data": basic_node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -86,9 +84,8 @@ class TestTemplateTransformNode:
         """Test _get_description method."""
         node = TemplateTransformNode(
             id="test_node",
-            config=basic_node_data,
+            config={"id": "test", "data": basic_node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -105,9 +102,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=node_data,
+            config={"id": "test", "data": node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -149,9 +145,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=basic_node_data,
+            config={"id": "test", "data": basic_node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -176,9 +171,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=node_data,
+            config={"id": "test", "data": node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -197,9 +191,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=basic_node_data,
+            config={"id": "test", "data": basic_node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -219,9 +212,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=basic_node_data,
+            config={"id": "test", "data": basic_node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -261,9 +253,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=node_data,
+            config={"id": "test", "data": node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -305,9 +296,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=node_data,
+            config={"id": "test", "data": node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -343,9 +333,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=node_data,
+            config={"id": "test", "data": node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -371,9 +360,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=node_data,
+            config={"id": "test", "data": node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -400,9 +388,8 @@ class TestTemplateTransformNode:
 
         node = TemplateTransformNode(
             id="test_node",
-            config=node_data,
+            config={"id": "test", "data": node_data},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 

@@ -84,12 +84,12 @@ class TestTemplateTransformNodeData:
             "title": "Template with Retry",
             "variables": [{"variable": "data", "value_selector": ["sys", "data"]}],
             "template": "{{ data }}",
-            "retry_config": {"enabled": True, "max_retries": 3, "retry_interval": 1000},
+            "retry_config": {"retry_enabled": True, "max_retries": 3, "retry_interval": 1000},
         }
 
         node_data = TemplateTransformNodeData.model_validate(data)
 
-        assert node_data.retry_config.enabled is True
+        assert node_data.retry_config.retry_enabled is True
         assert node_data.retry_config.max_retries == 3
         assert node_data.retry_config.retry_interval == 1000
 
@@ -131,7 +131,10 @@ class TestTemplateTransformNodeData:
                 {"variable": "greeting", "value_selector": ["sys", "greeting"]},
             ],
             "template": "{{ greeting }} {{ name }}!",
-            "default_value_dict": {"greeting": "Hello", "name": "Guest"},
+            "default_value": [
+                {"key": "greeting", "type": "string", "value": "Hello"},
+                {"key": "name", "type": "string", "value": "Guest"},
+            ],
         }
 
         node_data = TemplateTransformNodeData.model_validate(data)

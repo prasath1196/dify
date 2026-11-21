@@ -1,9 +1,22 @@
+from typing import Any
+
 from core.workflow.nodes.iteration.entities import (
     ErrorHandleMode,
     IterationNodeData,
     IterationStartNodeData,
     IterationState,
 )
+
+
+def _state(**kwargs: Any) -> IterationState:
+    """Build an IterationState with the base fields every state requires."""
+    defaults: dict[str, Any] = {
+        "iteration_node_id": "iteration-1",
+        "index": 0,
+        "inputs": {},
+        "metadata": IterationState.MetaData(iterator_length=0),
+    }
+    return IterationState(**(defaults | kwargs))
 
 
 class TestErrorHandleMode:
@@ -199,14 +212,14 @@ class TestIterationState:
 
     def test_iteration_state_default_values(self):
         """Test IterationState default values."""
-        state = IterationState()
+        state = _state()
 
         assert state.outputs == []
         assert state.current_output is None
 
     def test_iteration_state_with_outputs(self):
         """Test IterationState with outputs."""
-        state = IterationState(outputs=["result1", "result2", "result3"])
+        state = _state(outputs=["result1", "result2", "result3"])
 
         assert len(state.outputs) == 3
         assert state.outputs[0] == "result1"
@@ -214,13 +227,13 @@ class TestIterationState:
 
     def test_iteration_state_with_current_output(self):
         """Test IterationState with current output."""
-        state = IterationState(current_output="current_value")
+        state = _state(current_output="current_value")
 
         assert state.current_output == "current_value"
 
     def test_iteration_state_get_last_output_with_outputs(self):
         """Test get_last_output with outputs present."""
-        state = IterationState(outputs=["first", "second", "last"])
+        state = _state(outputs=["first", "second", "last"])
 
         result = state.get_last_output()
 
@@ -228,7 +241,7 @@ class TestIterationState:
 
     def test_iteration_state_get_last_output_empty(self):
         """Test get_last_output with empty outputs."""
-        state = IterationState(outputs=[])
+        state = _state(outputs=[])
 
         result = state.get_last_output()
 
@@ -236,7 +249,7 @@ class TestIterationState:
 
     def test_iteration_state_get_last_output_single(self):
         """Test get_last_output with single output."""
-        state = IterationState(outputs=["only_one"])
+        state = _state(outputs=["only_one"])
 
         result = state.get_last_output()
 
@@ -244,7 +257,7 @@ class TestIterationState:
 
     def test_iteration_state_get_current_output(self):
         """Test get_current_output method."""
-        state = IterationState(current_output={"key": "value"})
+        state = _state(current_output={"key": "value"})
 
         result = state.get_current_output()
 
@@ -252,7 +265,7 @@ class TestIterationState:
 
     def test_iteration_state_get_current_output_none(self):
         """Test get_current_output when None."""
-        state = IterationState()
+        state = _state()
 
         result = state.get_current_output()
 
@@ -260,7 +273,7 @@ class TestIterationState:
 
     def test_iteration_state_with_complex_outputs(self):
         """Test IterationState with complex output types."""
-        state = IterationState(
+        state = _state(
             outputs=[
                 {"id": 1, "name": "first"},
                 {"id": 2, "name": "second"},
@@ -275,14 +288,14 @@ class TestIterationState:
 
     def test_iteration_state_with_none_outputs(self):
         """Test IterationState with None values in outputs."""
-        state = IterationState(outputs=["value1", None, "value3"])
+        state = _state(outputs=["value1", None, "value3"])
 
         assert len(state.outputs) == 3
         assert state.outputs[1] is None
 
     def test_iteration_state_get_last_output_with_none(self):
         """Test get_last_output when last output is None."""
-        state = IterationState(outputs=["first", None])
+        state = _state(outputs=["first", None])
 
         result = state.get_last_output()
 
@@ -306,7 +319,7 @@ class TestIterationState:
 
     def test_iteration_state_outputs_modification(self):
         """Test modifying IterationState outputs."""
-        state = IterationState(outputs=[])
+        state = _state(outputs=[])
 
         state.outputs.append("new_output")
         state.outputs.append("another_output")
@@ -316,7 +329,7 @@ class TestIterationState:
 
     def test_iteration_state_current_output_update(self):
         """Test updating current_output."""
-        state = IterationState()
+        state = _state()
 
         state.current_output = "first_value"
         assert state.get_current_output() == "first_value"
@@ -326,14 +339,14 @@ class TestIterationState:
 
     def test_iteration_state_with_numeric_outputs(self):
         """Test IterationState with numeric outputs."""
-        state = IterationState(outputs=[1, 2, 3, 4, 5])
+        state = _state(outputs=[1, 2, 3, 4, 5])
 
         assert state.get_last_output() == 5
         assert len(state.outputs) == 5
 
     def test_iteration_state_with_boolean_outputs(self):
         """Test IterationState with boolean outputs."""
-        state = IterationState(outputs=[True, False, True])
+        state = _state(outputs=[True, False, True])
 
         assert state.get_last_output() is True
         assert state.outputs[1] is False

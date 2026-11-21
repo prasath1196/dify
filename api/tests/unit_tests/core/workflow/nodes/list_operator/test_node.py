@@ -1,13 +1,14 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from core.workflow.graph_engine.entities.graph import Graph
-from core.workflow.graph_engine.entities.graph_init_params import GraphInitParams
-from core.workflow.graph_engine.entities.graph_runtime_state import GraphRuntimeState
 
 from core.variables import ArrayNumberSegment, ArrayStringSegment
+from core.workflow.entities import GraphInitParams
 from core.workflow.enums import NodeType, WorkflowNodeExecutionStatus
+from core.workflow.graph import Graph
 from core.workflow.nodes.list_operator.node import ListOperatorNode
+from core.workflow.runtime import GraphRuntimeState
 from models.workflow import WorkflowType
 
 
@@ -19,6 +20,8 @@ class TestListOperatorNode:
         """Create mock GraphRuntimeState."""
         mock_state = MagicMock(spec=GraphRuntimeState)
         mock_variable_pool = MagicMock()
+        # Plain-text condition values pass through template conversion unchanged.
+        mock_variable_pool.convert_template.side_effect = lambda template: SimpleNamespace(text=str(template))
         mock_state.variable_pool = mock_variable_pool
         return mock_state
 
@@ -37,8 +40,8 @@ class TestListOperatorNode:
             workflow_id="test",
             graph_config={},
             user_id="test",
-            user_from="test",
-            invoke_from="test",
+            user_from="account",
+            invoke_from="debugger",
             call_depth=0,
         )
 
@@ -50,9 +53,8 @@ class TestListOperatorNode:
             mock_graph_runtime_state.variable_pool.get.return_value = mock_variable
             return ListOperatorNode(
                 id="test",
-                config=config,
+                config={"id": "test", "data": config},
                 graph_init_params=graph_init_params,
-                graph=mock_graph,
                 graph_runtime_state=mock_graph_runtime_state,
             )
 
@@ -70,9 +72,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -116,9 +117,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -136,8 +136,7 @@ class TestListOperatorNode:
             "variable": ["sys", "items"],
             "filter_by": {
                 "enabled": True,
-                "condition": "contains",
-                "value": "app",
+                "conditions": [{"comparison_operator": "contains", "value": "app"}],
             },
             "order_by": {"enabled": False},
             "limit": {"enabled": False},
@@ -148,9 +147,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -166,8 +164,7 @@ class TestListOperatorNode:
             "variable": ["sys", "items"],
             "filter_by": {
                 "enabled": True,
-                "condition": "not contains",
-                "value": "app",
+                "conditions": [{"comparison_operator": "not contains", "value": "app"}],
             },
             "order_by": {"enabled": False},
             "limit": {"enabled": False},
@@ -178,9 +175,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -196,8 +192,7 @@ class TestListOperatorNode:
             "variable": ["sys", "numbers"],
             "filter_by": {
                 "enabled": True,
-                "condition": ">",
-                "value": "5",
+                "conditions": [{"comparison_operator": ">", "value": "5"}],
             },
             "order_by": {"enabled": False},
             "limit": {"enabled": False},
@@ -208,9 +203,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -237,9 +231,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -266,9 +259,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -295,9 +287,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -313,8 +304,7 @@ class TestListOperatorNode:
             "variable": ["sys", "numbers"],
             "filter_by": {
                 "enabled": True,
-                "condition": ">",
-                "value": "3",
+                "conditions": [{"comparison_operator": ">", "value": "3"}],
             },
             "order_by": {
                 "enabled": True,
@@ -331,9 +321,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -356,9 +345,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -382,9 +370,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -401,8 +388,7 @@ class TestListOperatorNode:
             "variable": ["sys", "items"],
             "filter_by": {
                 "enabled": True,
-                "condition": "start with",
-                "value": "app",
+                "conditions": [{"comparison_operator": "start with", "value": "app"}],
             },
             "order_by": {"enabled": False},
             "limit": {"enabled": False},
@@ -413,9 +399,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -431,8 +416,7 @@ class TestListOperatorNode:
             "variable": ["sys", "items"],
             "filter_by": {
                 "enabled": True,
-                "condition": "end with",
-                "value": "le",
+                "conditions": [{"comparison_operator": "end with", "value": "le"}],
             },
             "order_by": {"enabled": False},
             "limit": {"enabled": False},
@@ -443,9 +427,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -461,8 +444,7 @@ class TestListOperatorNode:
             "variable": ["sys", "numbers"],
             "filter_by": {
                 "enabled": True,
-                "condition": "=",
-                "value": "5",
+                "conditions": [{"comparison_operator": "=", "value": "5"}],
             },
             "order_by": {"enabled": False},
             "limit": {"enabled": False},
@@ -473,9 +455,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -491,8 +472,7 @@ class TestListOperatorNode:
             "variable": ["sys", "numbers"],
             "filter_by": {
                 "enabled": True,
-                "condition": "≠",
-                "value": "5",
+                "conditions": [{"comparison_operator": "≠", "value": "5"}],
             },
             "order_by": {"enabled": False},
             "limit": {"enabled": False},
@@ -503,9 +483,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 
@@ -532,9 +511,8 @@ class TestListOperatorNode:
 
         node = ListOperatorNode(
             id="test",
-            config=config,
+            config={"id": "test", "data": config},
             graph_init_params=graph_init_params,
-            graph=mock_graph,
             graph_runtime_state=mock_graph_runtime_state,
         )
 

@@ -415,7 +415,7 @@ class TestCodeNodeInitialization:
     """Test suite for CodeNode initialization methods."""
 
     def test_init_node_data_python3(self):
-        """Test init_node_data with Python3 configuration."""
+        """Test _hydrate_node_data with Python3 configuration."""
         node = CodeNode.__new__(CodeNode)
         data = {
             "title": "Test Node",
@@ -425,13 +425,13 @@ class TestCodeNodeInitialization:
             "outputs": {"x": {"type": "number"}},
         }
 
-        node.init_node_data(data)
+        node._node_data = node._hydrate_node_data(data)
 
         assert node._node_data.title == "Test Node"
         assert node._node_data.code_language == CodeLanguage.PYTHON3
 
     def test_init_node_data_javascript(self):
-        """Test init_node_data with JavaScript configuration."""
+        """Test _hydrate_node_data with JavaScript configuration."""
         node = CodeNode.__new__(CodeNode)
         data = {
             "title": "JS Node",
@@ -441,7 +441,7 @@ class TestCodeNodeInitialization:
             "outputs": {"x": {"type": "number"}},
         }
 
-        node.init_node_data(data)
+        node._node_data = node._hydrate_node_data(data)
 
         assert node._node_data.code_language == CodeLanguage.JAVASCRIPT
 

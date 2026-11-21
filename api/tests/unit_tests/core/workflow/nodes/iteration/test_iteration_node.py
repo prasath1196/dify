@@ -163,7 +163,7 @@ class TestIterationNodeInitialization:
     """Test suite for IterationNode initialization."""
 
     def test_init_node_data_basic(self):
-        """Test init_node_data with basic configuration."""
+        """Test _hydrate_node_data with basic configuration."""
         node = IterationNode.__new__(IterationNode)
         data = {
             "title": "Test Iteration",
@@ -171,13 +171,13 @@ class TestIterationNodeInitialization:
             "output_selector": ["iteration", "result"],
         }
 
-        node.init_node_data(data)
+        node._node_data = node._hydrate_node_data(data)
 
         assert node._node_data.title == "Test Iteration"
         assert node._node_data.iterator_selector == ["start", "items"]
 
     def test_init_node_data_with_parallel(self):
-        """Test init_node_data with parallel configuration."""
+        """Test _hydrate_node_data with parallel configuration."""
         node = IterationNode.__new__(IterationNode)
         data = {
             "title": "Parallel Iteration",
@@ -187,13 +187,13 @@ class TestIterationNodeInitialization:
             "parallel_nums": 5,
         }
 
-        node.init_node_data(data)
+        node._node_data = node._hydrate_node_data(data)
 
         assert node._node_data.is_parallel is True
         assert node._node_data.parallel_nums == 5
 
     def test_init_node_data_with_error_handle_mode(self):
-        """Test init_node_data with error handle mode."""
+        """Test _hydrate_node_data with error handle mode."""
         node = IterationNode.__new__(IterationNode)
         data = {
             "title": "Error Handle Test",
@@ -202,7 +202,7 @@ class TestIterationNodeInitialization:
             "error_handle_mode": "continue-on-error",
         }
 
-        node.init_node_data(data)
+        node._node_data = node._hydrate_node_data(data)
 
         assert node._node_data.error_handle_mode == ErrorHandleMode.CONTINUE_ON_ERROR
 
