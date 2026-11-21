@@ -24,6 +24,15 @@ from core.rag.datasource.retrieval_service import RetrievalService
 from core.rag.entities.metadata_entities import Condition, MetadataCondition
 from core.rag.retrieval.dataset_retrieval import DatasetRetrieval
 from core.rag.retrieval.retrieval_methods import RetrievalMethod
+from core.rag.retrieval.template_prompts import (
+    METADATA_FILTER_ASSISTANT_PROMPT_1,
+    METADATA_FILTER_ASSISTANT_PROMPT_2,
+    METADATA_FILTER_COMPLETION_PROMPT,
+    METADATA_FILTER_SYSTEM_PROMPT,
+    METADATA_FILTER_USER_PROMPT_1,
+    METADATA_FILTER_USER_PROMPT_2,
+    METADATA_FILTER_USER_PROMPT_3,
+)
 from core.variables import (
     ArrayFileSegment,
     FileSegment,
@@ -39,15 +48,6 @@ from core.workflow.enums import (
 from core.workflow.node_events import ModelInvokeCompletedEvent, NodeRunResult
 from core.workflow.nodes.base import LLMUsageTrackingMixin
 from core.workflow.nodes.base.node import Node
-from core.workflow.nodes.knowledge_retrieval.template_prompts import (
-    METADATA_FILTER_ASSISTANT_PROMPT_1,
-    METADATA_FILTER_ASSISTANT_PROMPT_2,
-    METADATA_FILTER_COMPLETION_PROMPT,
-    METADATA_FILTER_SYSTEM_PROMPT,
-    METADATA_FILTER_USER_PROMPT_1,
-    METADATA_FILTER_USER_PROMPT_2,
-    METADATA_FILTER_USER_PROMPT_3,
-)
 from core.workflow.nodes.llm.entities import LLMNodeChatModelMessage, LLMNodeCompletionModelPromptTemplate, ModelConfig
 from core.workflow.nodes.llm.file_saver import FileSaverImpl, LLMFileSaver
 from core.workflow.nodes.llm.node import LLMNode
