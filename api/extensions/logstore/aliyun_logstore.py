@@ -851,8 +851,7 @@ class AliyunLogStore:
                     self.project_name,
                     from_time,
                     to_time,
-                    query,
-                    sql,
+                    full_query,
                 )
 
             try:
