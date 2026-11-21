@@ -120,7 +120,7 @@ class LargeLanguageModel(AIModel):
 
         self.started_at = time.perf_counter()
 
-        callbacks = callbacks or []
+        callbacks = list(callbacks or [])
 
         if dify_config.DEBUG:
             callbacks.append(LoggingCallback())
