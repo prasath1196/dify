@@ -1,8 +1,10 @@
+import mimetypes
 import re
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Union
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 
 from configs import dify_config
 from core.helper import ssrf_proxy
@@ -58,21 +60,7 @@ class ExtractProcessor:
         response = ssrf_proxy.get(url, headers={"User-Agent": USER_AGENT})
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            suffix = Path(url).suffix
-            if not suffix and suffix != ".":
-                # get content-type
-                if response.headers.get("Content-Type"):
-                    suffix = "." + response.headers.get("Content-Type").split("/")[-1]
-                else:
-                    content_disposition = response.headers.get("Content-Disposition")
-                    filename_match = re.search(r'filename="([^"]+)"', content_disposition)
-                    if filename_match:
-                        filename = unquote(filename_match.group(1))
-                        match = re.search(r"\.(\w+)$", filename)
-                        if match:
-                            suffix = "." + match.group(1)
-                        else:
-                            suffix = ""
+            suffix = cls._download_suffix(url, response.headers)
             # https://stackoverflow.com/questions/26541416/generate-temporary-file-names-without-creating-actual-file-in-python#comment90414256_26541521
             file_path = f"{temp_dir}/{tempfile.gettempdir()}{suffix}"
             Path(file_path).write_bytes(response.content)
@@ -87,6 +75,23 @@ class ExtractProcessor:
                 )
             else:
                 return cls.extract(extract_setting=extract_setting, file_path=file_path)
+
+    @staticmethod
+    def _download_suffix(url: str, headers: Mapping[str, str]) -> str:
+        """Pick a file extension for a downloaded URL: URL path, then Content-Disposition, then Content-Type."""
+        suffix = Path(urlparse(url).path).suffix
+        if suffix:
+            return suffix
+
+        filename_match = re.search(r'filename="([^"]+)"', headers.get("Content-Disposition") or "")
+        if filename_match:
+            suffix = Path(unquote(filename_match.group(1))).suffix
+            if suffix:
+                return suffix
+
+        mime_type = (headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        guessed = mimetypes.guess_extension(mime_type) if mime_type else None
+        return guessed if guessed and guessed != ".bin" else ""
 
     @classmethod
     def extract(
