@@ -175,3 +175,22 @@ def test_multi_create_segment_ignores_lock_not_owned(
     document.dataset_id = dataset.id
     document.word_count = 0
     document.doc_form = "qa_model"
+
+    segments = [{"content": "question text", "answer": "answer text", "keywords": ["k1"]}]
+
+    # Avoid real DB operations
+    db_mock = Mock()
+    db_mock.session = Mock()
+    monkeypatch.setattr("services.dataset_service.db", db_mock)
+    vector_service = Mock()
+    monkeypatch.setattr("services.dataset_service.VectorService", vector_service)
+
+    # Act
+    result = SegmentService.multi_create_segment(segments=segments, document=document, dataset=dataset)
+
+    # Assert
+    # Under LockNotOwnedError, multi_create_segment swallows the error, writes nothing and returns None.
+    assert result is None
+    db_mock.session.add.assert_not_called()
+    db_mock.session.commit.assert_not_called()
+    vector_service.create_segments_vector.assert_not_called()
