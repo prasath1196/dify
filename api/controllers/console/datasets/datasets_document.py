@@ -388,10 +388,15 @@ class DatasetDocumentListApi(Resource):
     @account_initialization_required
     @cloud_edition_billing_rate_limit_check("knowledge")
     def delete(self, dataset_id):
+        current_user, _ = current_account_with_tenant()
         dataset_id = str(dataset_id)
         dataset = DatasetService.get_dataset(dataset_id)
         if dataset is None:
             raise NotFound("Dataset not found.")
+        try:
+            DatasetService.check_dataset_permission(dataset, current_user)
+        except services.errors.account.NoPermissionError as e:
+            raise Forbidden(str(e))
         # check user's model setting
         DatasetService.check_dataset_model_setting(dataset)
 

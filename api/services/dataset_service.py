@@ -1382,7 +1382,13 @@ class DocumentService:
         # Check if document_ids is not empty to avoid WHERE false condition
         if not document_ids or len(document_ids) == 0:
             return
-        documents = db.session.scalars(select(Document).where(Document.id.in_(document_ids))).all()
+        documents = db.session.scalars(
+            select(Document).where(Document.id.in_(document_ids), Document.dataset_id == dataset.id)
+        ).all()
+        if not documents:
+            return
+        # Only clean up documents that belong to this dataset.
+        document_ids = [document.id for document in documents]
         file_ids = [
             document.data_source_info_dict.get("upload_file_id", "")
             for document in documents

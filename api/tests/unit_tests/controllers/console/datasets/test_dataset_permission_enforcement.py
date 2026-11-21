@@ -11,6 +11,7 @@ from werkzeug.exceptions import Forbidden
 import services
 from controllers.console.datasets.datasets import DatasetAutoDisableLogApi, DatasetErrorDocs
 from controllers.console.datasets.datasets_document import (
+    DatasetDocumentListApi,
     DocumentPauseApi,
     DocumentPipelineExecutionLogApi,
     DocumentRecoverApi,
@@ -50,8 +51,9 @@ def _call(module: str, handler: Callable, *args, json: dict | None = None):
         (_DOCUMENTS, DocumentPauseApi, "patch", ("ds-1", "doc-1"), None),
         (_DOCUMENTS, DocumentRecoverApi, "patch", ("ds-1", "doc-1"), None),
         (_DOCUMENTS, DocumentRetryApi, "post", ("ds-1",), {"document_ids": ["doc-1"]}),
+        (_DOCUMENTS, DatasetDocumentListApi, "delete", ("ds-1",), None),
     ],
-    ids=["error-docs", "auto-disable-logs", "pipeline-log", "pause", "recover", "retry"],
+    ids=["error-docs", "auto-disable-logs", "pipeline-log", "pause", "recover", "retry", "batch-delete"],
 )
 def test_endpoint_rejects_caller_without_dataset_permission(module, resource, method, args, json):
     with pytest.raises(Forbidden):
@@ -62,3 +64,4 @@ def test_endpoint_rejects_caller_without_dataset_permission(module, resource, me
     document_service.recover_document.assert_not_called()
     document_service.retry_document.assert_not_called()
     document_service.get_error_documents_by_dataset_id.assert_not_called()
+    document_service.delete_documents.assert_not_called()
