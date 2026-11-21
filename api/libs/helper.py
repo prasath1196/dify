@@ -8,7 +8,7 @@ import subprocess
 import time
 import uuid
 from collections.abc import Generator, Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from hashlib import sha256
 from typing import TYPE_CHECKING, Annotated, Any, Optional, Union, cast
 from uuid import UUID
@@ -24,6 +24,7 @@ from core.app.features.rate_limiting.rate_limit import RateLimitGenerator
 from core.file import helpers as file_helpers
 from core.model_runtime.utils.encoders import jsonable_encoder
 from extensions.ext_redis import redis_client
+from libs.datetime_utils import utc_timestamp
 
 if TYPE_CHECKING:
     from models import Account
@@ -91,10 +92,7 @@ class AvatarUrlField(fields.Raw):
 
 class TimestampField(fields.Raw):
     def format(self, value) -> int:
-        # Naive datetimes in Dify are UTC; don't let timestamp() read them as server-local time.
-        if value.tzinfo is None:
-            value = value.replace(tzinfo=UTC)
-        return int(value.timestamp())
+        return int(utc_timestamp(value))
 
 
 def email(email):

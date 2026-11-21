@@ -1,12 +1,12 @@
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Union
 from urllib.parse import urlparse
 
 from sqlalchemy import select
 
 from extensions.ext_database import db
-from libs.datetime_utils import naive_utc_now
+from libs.datetime_utils import naive_utc_now, utc_timestamp
 from models.model import Message
 
 
@@ -24,9 +24,7 @@ def filter_none_values(data: dict):
 
 def datetime_to_epoch_nanos(dt: datetime) -> int:
     """Convert to nanoseconds since the Unix epoch, treating naive datetimes as UTC like the rest of Dify."""
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
-    return int(dt.timestamp() * 1_000_000_000)
+    return int(utc_timestamp(dt) * 1_000_000_000)
 
 
 def get_message_data(message_id: str):
