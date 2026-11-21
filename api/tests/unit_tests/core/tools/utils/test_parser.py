@@ -221,3 +221,17 @@ def test_parse_openapi_with_request_env_selects_matching_server(app):
         tool_bundles = ApiBasedToolSchemaParser.parse_openapi_to_tool_bundle(openapi)
 
     assert tool_bundles[0].server_url == "https://staging.example.com/ping"
+
+
+def test_parse_swagger_reports_warnings_to_caller_dict():
+    swagger = {
+        "swagger": "2.0",
+        "info": {"title": "API", "version": "1.0.0"},
+        "servers": [{"url": "https://api.example.com"}],
+        "paths": {"/ping": {"get": {"operationId": "ping", "responses": {"200": {"description": "ok"}}}}},
+    }
+    warning: dict = {}
+
+    ApiBasedToolSchemaParser.parse_swagger_to_openapi(swagger, warning=warning)
+
+    assert "missing_summary" in warning

@@ -272,13 +272,13 @@ class ApiBasedToolSchemaParser:
     def parse_swagger_to_openapi(
         swagger: dict, extra_info: dict | None = None, warning: dict | None = None
     ) -> dict[str, Any]:
-        warning = warning or {}
         """
         parse swagger to openapi
 
         :param swagger: the swagger dict
         :return: the openapi dict
         """
+        warning = warning if warning is not None else {}
         # convert swagger to openapi
         info = swagger.get("info", {"title": "Swagger", "description": "Swagger", "version": "1.0.0"})
 
