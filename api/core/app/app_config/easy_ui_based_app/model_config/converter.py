@@ -57,11 +57,9 @@ class ModelConfigConverter:
             raise QuotaExceededError(f"Model provider {provider_name} quota exceeded.")
 
         # model config
-        completion_params = model_config.parameters
-        stop = []
-        if "stop" in completion_params:
-            stop = completion_params["stop"]
-            del completion_params["stop"]
+        completion_params = dict(model_config.parameters)
+        stop_in_params = completion_params.pop("stop", None) or []
+        stop = list(model_config.stop or stop_in_params)
 
         model_schema = model_type_instance.get_model_schema(model_config.model, model_credentials)
 
