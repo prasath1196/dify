@@ -255,6 +255,8 @@ class Vector:
     def add_texts(self, documents: list[Document], **kwargs):
         if kwargs.get("duplicate_check", False):
             documents = self._filter_duplicate_texts(documents)
+        if not documents:
+            return
 
         embeddings = self._embeddings.embed_documents([document.page_content for document in documents])
         self._vector_processor.create(texts=documents, embeddings=embeddings, **kwargs)
@@ -310,16 +312,14 @@ class Vector:
         return CacheEmbedding(embedding_model)
 
     def _filter_duplicate_texts(self, texts: list[Document]) -> list[Document]:
-        for text in texts.copy():
-            if text.metadata is None:
+        """Return the documents whose doc_id is not already stored; the input list is left unchanged."""
+        unique_texts = []
+        for text in texts:
+            doc_id = text.metadata.get("doc_id")
+            if doc_id and self.text_exists(doc_id):
                 continue
-            doc_id = text.metadata["doc_id"]
-            if doc_id:
-                exists_duplicate_node = self.text_exists(doc_id)
-                if exists_duplicate_node:
-                    texts.remove(text)
-
-        return texts
+            unique_texts.append(text)
+        return unique_texts
 
     def __getattr__(self, name):
         if self._vector_processor is not None:

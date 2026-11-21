@@ -182,6 +182,7 @@ class VectorServiceTestDataFactory:
         dataset.tenant_id = tenant_id
 
         dataset.doc_form = doc_form
+        dataset.is_multimodal = False
 
         dataset.indexing_technique = indexing_technique
 
@@ -535,7 +536,7 @@ class TestVectorService:
         """
         # Arrange
         dataset = VectorServiceTestDataFactory.create_dataset_mock(
-            doc_form="parent_child_model", indexing_technique="high_quality"
+            doc_form="hierarchical_model", indexing_technique="high_quality"
         )
 
         segment = VectorServiceTestDataFactory.create_document_segment_mock()
@@ -553,7 +554,7 @@ class TestVectorService:
         mock_model_manager.return_value.get_model_instance.return_value = mock_embedding_model
 
         # Act
-        VectorService.create_segments_vector(None, [segment], dataset, "parent_child_model")
+        VectorService.create_segments_vector(None, [segment], dataset, "hierarchical_model")
 
         # Assert
         mock_generate_child_chunks.assert_called_once()
@@ -568,7 +569,7 @@ class TestVectorService:
         """
         # Arrange
         dataset = VectorServiceTestDataFactory.create_dataset_mock(
-            doc_form="parent_child_model", indexing_technique="high_quality"
+            doc_form="hierarchical_model", indexing_technique="high_quality"
         )
 
         segment = VectorServiceTestDataFactory.create_document_segment_mock()
@@ -576,7 +577,7 @@ class TestVectorService:
         mock_db.session.query.return_value.filter_by.return_value.first.return_value = None
 
         # Act
-        VectorService.create_segments_vector(None, [segment], dataset, "parent_child_model")
+        VectorService.create_segments_vector(None, [segment], dataset, "hierarchical_model")
 
         # Assert
         # Should not raise an error, just skip the segment
@@ -591,7 +592,7 @@ class TestVectorService:
         """
         # Arrange
         dataset = VectorServiceTestDataFactory.create_dataset_mock(
-            doc_form="parent_child_model", indexing_technique="high_quality"
+            doc_form="hierarchical_model", indexing_technique="high_quality"
         )
 
         segment = VectorServiceTestDataFactory.create_document_segment_mock()
@@ -604,7 +605,7 @@ class TestVectorService:
 
         # Act & Assert
         with pytest.raises(ValueError, match="No processing rule found"):
-            VectorService.create_segments_vector(None, [segment], dataset, "parent_child_model")
+            VectorService.create_segments_vector(None, [segment], dataset, "hierarchical_model")
 
     @patch("services.vector_service.db")
     def test_create_segments_vector_economy_indexing_technique(self, mock_db):
@@ -616,7 +617,7 @@ class TestVectorService:
         """
         # Arrange
         dataset = VectorServiceTestDataFactory.create_dataset_mock(
-            doc_form="parent_child_model", indexing_technique="economy"
+            doc_form="hierarchical_model", indexing_technique="economy"
         )
 
         segment = VectorServiceTestDataFactory.create_document_segment_mock()
@@ -631,7 +632,7 @@ class TestVectorService:
 
         # Act & Assert
         with pytest.raises(ValueError, match="The knowledge base index technique is not high quality"):
-            VectorService.create_segments_vector(None, [segment], dataset, "parent_child_model")
+            VectorService.create_segments_vector(None, [segment], dataset, "hierarchical_model")
 
     @patch("services.vector_service.IndexProcessorFactory")
     @patch("services.vector_service.db")
@@ -1738,7 +1739,7 @@ class TestVector:
 
         vector = Vector(dataset=dataset)
 
-        doc1 = Document(page_content="Content 1", metadata=None)
+        doc1 = Document(page_content="Content 1")
 
         doc2 = Document(page_content="Content 2", metadata={})
 
@@ -1790,3 +1791,19 @@ class TestVector:
         mock_cache_embedding.assert_called_once_with(mock_embedding_model)
 
         assert vector._embeddings == mock_cache_embedding_instance
+
+
+def test_filter_duplicate_texts_returns_new_list_without_mutating_input():
+    vector = Vector.__new__(Vector)
+    vector._vector_processor = Mock()
+    vector._vector_processor.text_exists.side_effect = lambda doc_id: doc_id == "existing"
+    documents = [
+        Document(page_content="old", metadata={"doc_id": "existing"}),
+        Document(page_content="new", metadata={"doc_id": "fresh"}),
+        Document(page_content="no id"),
+    ]
+
+    unique = vector._filter_duplicate_texts(documents)
+
+    assert [doc.page_content for doc in unique] == ["new", "no id"]
+    assert len(documents) == 3

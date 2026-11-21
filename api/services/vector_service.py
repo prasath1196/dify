@@ -246,6 +246,8 @@ class VectorService:
 
     @classmethod
     def delete_child_chunk_vector(cls, child_chunk: ChildChunk, dataset: Dataset):
+        if dataset.indexing_technique != "high_quality":
+            return
         vector = Vector(dataset=dataset)
         vector.delete_by_ids([child_chunk.index_node_id])
 
