@@ -57,7 +57,9 @@ class CSVExtractor(BaseExtractor):
         docs = []
         try:
             # load csv file into pandas dataframe
-            df = pd.read_csv(csvfile, on_bad_lines="skip", **self.csv_args)
+            # Read cells as the text written in the file: no NaN for empty cells, no 007 -> 7.0.
+            read_args = {"dtype": str, "keep_default_na": False, **self.csv_args}
+            df = pd.read_csv(csvfile, on_bad_lines="skip", **read_args)
 
             # check source column exists
             if self.source_column and self.source_column not in df.columns:
@@ -66,7 +68,11 @@ class CSVExtractor(BaseExtractor):
             # create document objects
 
             for i, row in df.iterrows():
-                content = ";".join(f"{col.strip()}: {str(row[col]).strip()}" for col in df.columns)
+                content = ";".join(
+                    f"{str(col).strip()}: {str(row[col]).strip()}"
+                    for col in df.columns
+                    if pd.notna(row[col]) and str(row[col]).strip()
+                )
                 source = row[self.source_column] if self.source_column else ""
                 metadata = {"source": source, "row": i}
                 doc = Document(page_content=content, metadata=metadata)
