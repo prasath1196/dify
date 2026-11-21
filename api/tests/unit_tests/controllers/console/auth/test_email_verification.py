@@ -462,15 +462,29 @@ class TestEmailCodeLoginApi:
         mock_features.license.workspaces.is_available.return_value = True
         mock_get_features.return_value = mock_features
 
-        # Act & Assert - Should not raise WorkspacesLimitExceeded
-        with app.test_request_context(
-            "/email-code-login/validity",
-            method="POST",
-            json={"email": "test@example.com", "code": "123456", "token": "token"},
+        new_tenant = MagicMock()
+        token_pair = MagicMock(access_token="access", refresh_token="refresh", csrf_token="csrf")
+
+        # Act
+        with (
+            patch("controllers.console.auth.login.TenantService.create_tenant", return_value=new_tenant) as create,
+            patch("controllers.console.auth.login.TenantService.create_tenant_member") as create_member,
+            patch("controllers.console.auth.login.tenant_was_created"),
+            patch("controllers.console.auth.login.AccountService.login", return_value=token_pair),
+            patch("controllers.console.auth.login.AccountService.reset_login_error_rate_limit"),
+            app.test_request_context(
+                "/email-code-login/validity",
+                method="POST",
+                json={"email": "test@example.com", "code": encode_code("123456"), "token": "token"},
+            ),
         ):
-            api = EmailCodeLoginApi()
-            # This would complete the flow, but we're testing workspace creation logic
-            # In real implementation, TenantService.create_tenant would be called
+            response = EmailCodeLoginApi().post()
+
+        # Assert
+        assert response.json == {"result": "success"}
+        create.assert_called_once_with(f"{mock_account.name}'s Workspace")
+        create_member.assert_called_once_with(new_tenant, mock_account, role="owner")
+        assert mock_account.current_tenant is new_tenant
 
     @patch("controllers.console.wraps.db")
     @patch("controllers.console.auth.login.AccountService.get_email_code_login_data")
