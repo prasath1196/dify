@@ -17,7 +17,7 @@ from core.model_runtime.entities.message_entities import (
     TextPromptMessageContent,
     UserPromptMessage,
 )
-from core.model_runtime.entities.model_entities import AIModelEntity, FetchFrom, ModelType
+from core.model_runtime.entities.model_entities import AIModelEntity, FetchFrom, ModelFeature, ModelType
 from core.model_runtime.model_providers.model_provider_factory import ModelProviderFactory
 from core.variables import ArrayAnySegment, ArrayFileSegment, NoneSegment
 from core.workflow.entities import GraphInitParams
@@ -220,45 +220,65 @@ def test_fetch_files_with_non_existent_variable():
     assert result == []
 
 
-# def test_fetch_prompt_messages__vison_disabled(faker, llm_node, model_config):
-# TODO: Add test
-# pass
-# prompt_template = []
-# llm_node.node_data.prompt_template = prompt_template
+def _make_vision_model_config(features: list[ModelFeature]) -> ModelConfigWithCredentialsEntity:
+    model_config = mock.MagicMock(spec=ModelConfigWithCredentialsEntity)
+    model_config.provider = "openai"
+    model_config.model = "gpt-4o"
+    model_config.stop = None
+    model_config.model_schema = mock.MagicMock(spec=AIModelEntity)
+    model_config.model_schema.features = features
+    return model_config
 
-# fake_vision_detail = faker.random_element(
-#     [ImagePromptMessageContent.DETAIL.HIGH, ImagePromptMessageContent.DETAIL.LOW]
-# )
-# fake_remote_url = faker.url()
-# files = [
-#     File(
-#         id="1",
-#         tenant_id="test",
-#         type=FileType.IMAGE,
-#         filename="test1.jpg",
-#         transfer_method=FileTransferMethod.REMOTE_URL,
-#         remote_url=fake_remote_url,
-#         storage_key="",
-#     )
-# ]
 
-# fake_query = faker.sentence()
+def _make_remote_image_file() -> File:
+    return File(
+        id="1",
+        tenant_id="test",
+        type=FileType.IMAGE,
+        filename="test1.jpg",
+        transfer_method=FileTransferMethod.REMOTE_URL,
+        remote_url="https://example.com/test1.jpg",
+        storage_key="",
+    )
 
-# prompt_messages, _ = llm_node._fetch_prompt_messages(
-#     sys_query=fake_query,
-#     sys_files=files,
-#     context=None,
-#     memory=None,
-#     model_config=model_config,
-#     prompt_template=prompt_template,
-#     memory_config=None,
-#     vision_enabled=False,
-#     vision_detail=fake_vision_detail,
-#     variable_pool=llm_node.graph_runtime_state.variable_pool,
-#     jinja2_variables=[],
-# )
 
-# assert prompt_messages == [UserPromptMessage(content=fake_query)]
+@pytest.mark.parametrize(
+    ("vision_enabled", "features", "expect_image"),
+    [
+        (False, [ModelFeature.VISION], False),
+        (True, [ModelFeature.VISION], True),
+        (True, [], False),
+    ],
+    ids=["vision_disabled", "vision_enabled", "model_without_vision"],
+)
+def test_fetch_prompt_messages_attaches_sys_files_only_with_vision(
+    vision_enabled: bool, features: list[ModelFeature], expect_image: bool
+):
+    image_content = ImagePromptMessageContent(url="https://example.com/test1.jpg", format="jpg", mime_type="image/jpeg")
+
+    with (
+        mock.patch("core.workflow.nodes.llm.node.ModelManager"),
+        mock.patch("core.workflow.nodes.llm.node.file_manager.to_prompt_message_content", return_value=image_content),
+    ):
+        prompt_messages, stop = LLMNode.fetch_prompt_messages(
+            sys_query="What is in this picture?",
+            sys_files=[_make_remote_image_file()],
+            model_config=_make_vision_model_config(features),
+            prompt_template=[],
+            vision_enabled=vision_enabled,
+            vision_detail=ImagePromptMessageContent.DETAIL.HIGH,
+            variable_pool=VariablePool.empty(),
+            jinja2_variables=[],
+            tenant_id="test",
+        )
+
+    assert stop is None
+    if expect_image:
+        assert prompt_messages == [
+            UserPromptMessage(content=[image_content, TextPromptMessageContent(data="What is in this picture?")]),
+        ]
+    else:
+        assert prompt_messages == [UserPromptMessage(content="What is in this picture?")]
 
 
 # def test_fetch_prompt_messages__basic(faker, llm_node, model_config):
