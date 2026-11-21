@@ -31,7 +31,7 @@ class CommonValidator:
         for credential_form_schema in need_validate_credential_form_schema_map.values():
             # add the value of the credential_form_schema corresponding to it to validated_credentials
             result = self._validate_credential_form_schema(credential_form_schema, credentials)
-            if result:
+            if result is not None:
                 validated_credentials[credential_form_schema.variable] = result
 
         return validated_credentials
