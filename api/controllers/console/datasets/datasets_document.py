@@ -38,7 +38,7 @@ from fields.document_fields import (
 )
 from libs.datetime_utils import naive_utc_now, utc_timestamp
 from libs.login import current_account_with_tenant, login_required
-from models import DatasetProcessRule, Document, DocumentSegment, UploadFile
+from models import Dataset, DatasetProcessRule, Document, DocumentSegment, UploadFile
 from models.dataset import DocumentPipelineExecutionLog
 from services.dataset_service import DatasetService, DocumentService
 from services.entities.knowledge_entities.knowledge_entities import KnowledgeConfig, ProcessRule, RetrievalModel
@@ -115,6 +115,17 @@ register_schema_models(
 
 
 class DocumentResource(Resource):
+    def get_permitted_dataset(self, dataset_id: str) -> Dataset:
+        current_user, _ = current_account_with_tenant()
+        dataset = DatasetService.get_dataset(dataset_id)
+        if not dataset:
+            raise NotFound("Dataset not found.")
+        try:
+            DatasetService.check_dataset_permission(dataset, current_user)
+        except services.errors.account.NoPermissionError as e:
+            raise Forbidden(str(e))
+        return dataset
+
     def get_document(self, dataset_id: str, document_id: str) -> Document:
         current_user, current_tenant_id = current_account_with_tenant()
         dataset = DatasetService.get_dataset(dataset_id)
@@ -997,9 +1008,7 @@ class DocumentPauseApi(DocumentResource):
         dataset_id = str(dataset_id)
         document_id = str(document_id)
 
-        dataset = DatasetService.get_dataset(dataset_id)
-        if not dataset:
-            raise NotFound("Dataset not found.")
+        dataset = self.get_permitted_dataset(dataset_id)
 
         document = DocumentService.get_document(dataset.id, document_id)
 
@@ -1030,9 +1039,7 @@ class DocumentRecoverApi(DocumentResource):
         """recover document."""
         dataset_id = str(dataset_id)
         document_id = str(document_id)
-        dataset = DatasetService.get_dataset(dataset_id)
-        if not dataset:
-            raise NotFound("Dataset not found.")
+        dataset = self.get_permitted_dataset(dataset_id)
         document = DocumentService.get_document(dataset.id, document_id)
 
         # 404 if document not found
@@ -1062,10 +1069,8 @@ class DocumentRetryApi(DocumentResource):
         """retry document."""
         payload = DocumentRetryPayload.model_validate(console_ns.payload or {})
         dataset_id = str(dataset_id)
-        dataset = DatasetService.get_dataset(dataset_id)
+        dataset = self.get_permitted_dataset(dataset_id)
         retry_documents = []
-        if not dataset:
-            raise NotFound("Dataset not found.")
         for document_id in payload.document_ids:
             try:
                 document_id = str(document_id)
@@ -1157,9 +1162,7 @@ class DocumentPipelineExecutionLogApi(DocumentResource):
         dataset_id = str(dataset_id)
         document_id = str(document_id)
 
-        dataset = DatasetService.get_dataset(dataset_id)
-        if not dataset:
-            raise NotFound("Dataset not found.")
+        dataset = self.get_permitted_dataset(dataset_id)
         document = DocumentService.get_document(dataset.id, document_id)
         if not document:
             raise NotFound("Document not found.")

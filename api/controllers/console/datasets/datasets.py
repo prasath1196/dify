@@ -864,6 +864,11 @@ class DatasetErrorDocs(Resource):
         dataset = DatasetService.get_dataset(dataset_id_str)
         if dataset is None:
             raise NotFound("Dataset not found.")
+        current_user, _ = current_account_with_tenant()
+        try:
+            DatasetService.check_dataset_permission(dataset, current_user)
+        except services.errors.account.NoPermissionError as e:
+            raise Forbidden(str(e))
         results = DocumentService.get_error_documents_by_dataset_id(dataset_id_str)
 
         return {"data": [marshal(item, document_status_fields) for item in results], "total": len(results)}, 200
@@ -913,4 +918,9 @@ class DatasetAutoDisableLogApi(Resource):
         dataset = DatasetService.get_dataset(dataset_id_str)
         if dataset is None:
             raise NotFound("Dataset not found.")
+        current_user, _ = current_account_with_tenant()
+        try:
+            DatasetService.check_dataset_permission(dataset, current_user)
+        except services.errors.account.NoPermissionError as e:
+            raise Forbidden(str(e))
         return DatasetService.get_dataset_auto_disable_logs(dataset_id_str), 200
