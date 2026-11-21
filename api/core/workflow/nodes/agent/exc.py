@@ -15,31 +15,11 @@ class AgentStrategyError(AgentNodeError):
         super().__init__(message)
 
 
-class AgentStrategyNotFoundError(AgentStrategyError):
-    """Exception raised when the specified agent strategy is not found."""
-
-    def __init__(self, strategy_name: str, provider_name: str | None = None):
-        super().__init__(
-            f"Agent strategy '{strategy_name}' not found"
-            + (f" for provider '{provider_name}'" if provider_name else ""),
-            strategy_name,
-            provider_name,
-        )
-
-
 class AgentInvocationError(AgentNodeError):
     """Exception raised when there's an error invoking the agent."""
 
     def __init__(self, message: str, original_error: Exception | None = None):
         self.original_error = original_error
-        super().__init__(message)
-
-
-class AgentParameterError(AgentNodeError):
-    """Exception raised when there's an error with agent parameters."""
-
-    def __init__(self, message: str, parameter_name: str | None = None):
-        self.parameter_name = parameter_name
         super().__init__(message)
 
 
@@ -85,23 +65,6 @@ class AgentMessageTransformError(AgentNodeError):
 
     def __init__(self, message: str, original_error: Exception | None = None):
         self.original_error = original_error
-        super().__init__(message)
-
-
-class AgentModelError(AgentNodeError):
-    """Exception raised when there's an error with the model used by the agent."""
-
-    def __init__(self, message: str, model_name: str | None = None, provider: str | None = None):
-        self.model_name = model_name
-        self.provider = provider
-        super().__init__(message)
-
-
-class AgentMemoryError(AgentNodeError):
-    """Exception raised when there's an error with the agent's memory."""
-
-    def __init__(self, message: str, conversation_id: str | None = None):
-        self.conversation_id = conversation_id
         super().__init__(message)
 
 

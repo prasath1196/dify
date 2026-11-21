@@ -15,10 +15,6 @@ class ModelSchemaNotFoundError(ParameterExtractorNodeError):
     """Raised when the model schema is not found."""
 
 
-class InvalidInvokeResultError(ParameterExtractorNodeError):
-    """Raised when the invoke result is invalid."""
-
-
 class InvalidTextContentTypeError(ParameterExtractorNodeError):
     """Raised when the text content type is invalid."""
 
@@ -33,22 +29,6 @@ class RequiredParameterMissingError(ParameterExtractorNodeError):
 
 class InvalidSelectValueError(ParameterExtractorNodeError):
     """Raised when a select value is invalid."""
-
-
-class InvalidNumberValueError(ParameterExtractorNodeError):
-    """Raised when a number value is invalid."""
-
-
-class InvalidBoolValueError(ParameterExtractorNodeError):
-    """Raised when a bool value is invalid."""
-
-
-class InvalidStringValueError(ParameterExtractorNodeError):
-    """Raised when a string value is invalid."""
-
-
-class InvalidArrayValueError(ParameterExtractorNodeError):
-    """Raised when an array value is invalid."""
 
 
 class InvalidModelModeError(ParameterExtractorNodeError):
