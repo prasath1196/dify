@@ -97,7 +97,7 @@ class LoginApi(Resource):
             raise EmailPasswordLoginLimitError()
 
         # TODO: why invitation is re-assigned with different type?
-        invitation = args.invite_token  # type: ignore
+        invitation = args.invite_token
         if invitation:
             invitation = RegisterService.get_invitation_if_token_valid(None, args.email, invitation)  # type: ignore
 

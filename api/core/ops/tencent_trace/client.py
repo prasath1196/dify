@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 try:
     from importlib.metadata import version
 except ImportError:
-    from importlib_metadata import version  # type: ignore[import-not-found]
+    from importlib_metadata import version
 
 if TYPE_CHECKING:
     from opentelemetry.metrics import Meter
@@ -283,7 +283,7 @@ class TencentTraceClient:
             attrs: dict[str, str] = {}
             if attributes:
                 for k, v in attributes.items():
-                    attrs[k] = str(v) if not isinstance(v, (str, int, float, bool)) else v  # type: ignore[assignment]
+                    attrs[k] = str(v) if not isinstance(v, (str, int, float, bool)) else v
 
             logger.info(
                 "[Tencent Metrics] Metric: %s | Value: %.4f | Attributes: %s",
@@ -292,7 +292,7 @@ class TencentTraceClient:
                 json.dumps(attrs, ensure_ascii=False),
             )
 
-            self.hist_llm_duration.record(latency_seconds, attrs)  # type: ignore[attr-defined]
+            self.hist_llm_duration.record(latency_seconds, attrs)
         except Exception:
             logger.debug("[Tencent APM] Failed to record LLM duration", exc_info=True)
 
@@ -337,7 +337,7 @@ class TencentTraceClient:
                 json.dumps(attributes, ensure_ascii=False),
             )
 
-            self.hist_token_usage.record(token_count, attributes)  # type: ignore[attr-defined]
+            self.hist_token_usage.record(token_count, attributes)
         except Exception:
             logger.debug("[Tencent APM] Failed to record token usage", exc_info=True)
 
@@ -371,7 +371,7 @@ class TencentTraceClient:
                 json.dumps(attributes, ensure_ascii=False),
             )
 
-            self.hist_time_to_first_token.record(ttft_seconds, attributes)  # type: ignore[attr-defined]
+            self.hist_time_to_first_token.record(ttft_seconds, attributes)
         except Exception:
             logger.debug("[Tencent APM] Failed to record time to first token", exc_info=True)
 
@@ -405,7 +405,7 @@ class TencentTraceClient:
                 json.dumps(attributes, ensure_ascii=False),
             )
 
-            self.hist_time_to_generate.record(ttg_seconds, attributes)  # type: ignore[attr-defined]
+            self.hist_time_to_generate.record(ttg_seconds, attributes)
         except Exception:
             logger.debug("[Tencent APM] Failed to record time to generate", exc_info=True)
 
@@ -423,7 +423,7 @@ class TencentTraceClient:
             attrs: dict[str, str] = {}
             if attributes:
                 for k, v in attributes.items():
-                    attrs[k] = str(v) if not isinstance(v, (str, int, float, bool)) else v  # type: ignore[assignment]
+                    attrs[k] = str(v) if not isinstance(v, (str, int, float, bool)) else v
 
             logger.info(
                 "[Tencent Metrics] Metric: %s | Value: %.4f | Attributes: %s",
@@ -432,7 +432,7 @@ class TencentTraceClient:
                 json.dumps(attrs, ensure_ascii=False),
             )
 
-            self.hist_trace_duration.record(duration_seconds, attrs)  # type: ignore[attr-defined]
+            self.hist_trace_duration.record(duration_seconds, attrs)
         except Exception:
             logger.debug("[Tencent APM] Failed to record trace duration", exc_info=True)
 
@@ -520,13 +520,13 @@ class TencentTraceClient:
             # Shutdown instance-level meter provider
             if self.meter_provider is not None:
                 try:
-                    self.meter_provider.shutdown()  # type: ignore[attr-defined]
+                    self.meter_provider.shutdown()
                 except Exception:
                     logger.debug("[Tencent APM] Error shutting down meter provider", exc_info=True)
 
             if self.metric_reader is not None:
                 try:
-                    self.metric_reader.shutdown()  # type: ignore[attr-defined]
+                    self.metric_reader.shutdown()
                 except Exception:
                     logger.debug("[Tencent APM] Error shutting down metric reader", exc_info=True)
 

@@ -5,7 +5,7 @@ These tasks provide asynchronous storage capabilities for workflow execution dat
 improving performance by offloading storage operations to background workers.
 """
 
-from celery import shared_task  # type: ignore[import-untyped]
+from celery import shared_task
 from sqlalchemy.orm import Session
 
 from extensions.ext_database import db

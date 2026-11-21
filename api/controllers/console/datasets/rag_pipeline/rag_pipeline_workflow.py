@@ -4,7 +4,7 @@ from typing import Any, Literal, cast
 from uuid import UUID
 
 from flask import abort, request
-from flask_restx import Resource, marshal_with, reqparse  # type: ignore
+from flask_restx import Resource, marshal_with, reqparse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from werkzeug.exceptions import Forbidden, InternalServerError, NotFound

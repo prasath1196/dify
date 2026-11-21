@@ -29,7 +29,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
     def version(cls) -> str:
         return "1"
 
-    def _run(self):  # type: ignore[override]
+    def _run(self):
         if self._is_completion_ready():
             branch_handle = self._resolve_branch_selection()
             return NodeRunResult(

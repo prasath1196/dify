@@ -27,7 +27,7 @@ class WebsiteCrawlDatasourcePluginProviderController(DatasourcePluginProviderCon
         """
         return DatasourceProviderType.WEBSITE_CRAWL
 
-    def get_datasource(self, datasource_name: str) -> WebsiteCrawlDatasourcePlugin:  # type: ignore
+    def get_datasource(self, datasource_name: str) -> WebsiteCrawlDatasourcePlugin:
         """
         return datasource with given name
         """

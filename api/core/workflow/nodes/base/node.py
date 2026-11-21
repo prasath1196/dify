@@ -151,10 +151,10 @@ class Node(Generic[NodeDataT]):
         bucket = Node._registry.setdefault(node_type, {})
         if module_name.startswith("core.workflow.nodes."):
             # Production node definitions take precedence and may override
-            bucket[version] = cls  # type: ignore[index]
+            bucket[version] = cls
         else:
             # External/test subclasses may register but must not override production
-            bucket.setdefault(version, cls)  # type: ignore[index]
+            bucket.setdefault(version, cls)
         # Maintain a "latest" pointer preferring numeric versions; fallback to lexicographic
         version_keys = [v for v in bucket if v != "latest"]
         numeric_pairs: list[tuple[str, int]] = []
@@ -182,7 +182,7 @@ class Node(Generic[NodeDataT]):
         """
         # __orig_bases__ contains the original generic bases before type erasure.
         # For `class CodeNode(Node[CodeNodeData])`, this would be `(Node[CodeNodeData],)`.
-        for base in getattr(cls, "__orig_bases__", ()):  # type: ignore[attr-defined]
+        for base in getattr(cls, "__orig_bases__", ()):
             origin = get_origin(base)  # Returns `Node` for `Node[CodeNodeData]`
             if origin is Node:
                 args = get_args(base)  # Returns `(CodeNodeData,)` for `Node[CodeNodeData]`

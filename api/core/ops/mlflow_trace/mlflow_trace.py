@@ -266,7 +266,7 @@ class MLflowDataTrace(BaseTraceInstance):
         span = start_span_no_context(
             name=TraceTaskName.MESSAGE_TRACE.value,
             span_type=SpanType.LLM,
-            inputs=self._parse_prompts(trace_info.inputs),  # type: ignore[arg-type]
+            inputs=self._parse_prompts(trace_info.inputs),
             attributes={
                 "message_id": trace_info.message_id,  # type: ignore[dict-item]
                 "model_provider": trace_info.message_data.model_provider,
@@ -324,13 +324,13 @@ class MLflowDataTrace(BaseTraceInstance):
         ):
             return end_user_data.session_id
 
-        return metadata.get("from_account_id")  # type: ignore[return-value]
+        return metadata.get("from_account_id")
 
     def tool_trace(self, trace_info: ToolTraceInfo):
         span = start_span_no_context(
             name=trace_info.tool_name,
             span_type=SpanType.TOOL,
-            inputs=trace_info.tool_inputs,  # type: ignore[arg-type]
+            inputs=trace_info.tool_inputs,
             attributes={
                 "message_id": trace_info.message_id,  # type: ignore[dict-item]
                 "metadata": trace_info.metadata,  # type: ignore[dict-item]

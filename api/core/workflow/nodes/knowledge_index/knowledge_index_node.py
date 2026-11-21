@@ -38,7 +38,7 @@ class KnowledgeIndexNode(Node[KnowledgeIndexNodeData]):
     node_type = NodeType.KNOWLEDGE_INDEX
     execution_type = NodeExecutionType.RESPONSE
 
-    def _run(self) -> NodeRunResult:  # type: ignore
+    def _run(self) -> NodeRunResult:
         node_data = self.node_data
         variable_pool = self.graph_runtime_state.variable_pool
         dataset_id = variable_pool.get(["sys", SystemVariableKey.DATASET_ID])

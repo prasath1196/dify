@@ -20,7 +20,7 @@ from core.file import FILE_MODEL_IDENTITY, File, FileTransferMethod
 from core.file import helpers as file_helpers
 from core.tools.signature import sign_tool_file
 from core.workflow.enums import WorkflowExecutionStatus
-from libs.helper import generate_string  # type: ignore[import-not-found]
+from libs.helper import generate_string
 from libs.uuid_utils import uuidv7
 
 from .account import Account, Tenant

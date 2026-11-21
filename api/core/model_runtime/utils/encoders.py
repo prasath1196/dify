@@ -201,7 +201,7 @@ def jsonable_encoder(
         errors: list[Exception] = []
         errors.append(e)
         try:
-            data = vars(obj)  # type: ignore
+            data = vars(obj)
         except Exception as e:
             errors.append(e)
             raise ValueError(str(errors)) from e

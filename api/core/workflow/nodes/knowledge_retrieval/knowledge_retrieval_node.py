@@ -190,7 +190,7 @@ class KnowledgeRetrievalNode(LLMUsageTrackingMixin, Node[KnowledgeRetrievalNodeD
                 status=WorkflowNodeExecutionStatus.SUCCEEDED,
                 inputs=variables,
                 process_data={"usage": jsonable_encoder(usage)},
-                outputs=outputs,  # type: ignore
+                outputs=outputs,
                 metadata={
                     WorkflowNodeExecutionMetadataKey.TOTAL_TOKENS: usage.total_tokens,
                     WorkflowNodeExecutionMetadataKey.TOTAL_PRICE: usage.total_price,
@@ -423,7 +423,7 @@ class KnowledgeRetrievalNode(LLMUsageTrackingMixin, Node[KnowledgeRetrievalNodeD
         if retrieval_resource_list:
             retrieval_resource_list = sorted(
                 retrieval_resource_list,
-                key=self._score,  # type: ignore[arg-type, return-value]
+                key=self._score,
                 reverse=True,
             )
             for position, item in enumerate(retrieval_resource_list, start=1):

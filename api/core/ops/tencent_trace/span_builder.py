@@ -253,7 +253,7 @@ class TencentSpanBuilder:
         """Build dataset retrieval span."""
         status = Status(StatusCode.OK)
         if getattr(trace_info, "error", None):
-            status = Status(StatusCode.ERROR, trace_info.error)  # type: ignore[arg-type]
+            status = Status(StatusCode.ERROR, trace_info.error)
 
         documents_data = TencentSpanBuilder._extract_retrieval_documents(trace_info.documents)
 

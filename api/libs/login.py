@@ -20,7 +20,7 @@ def current_account_with_tenant():
     user_proxy = current_user
 
     get_current_object = getattr(user_proxy, "_get_current_object", None)
-    user = get_current_object() if callable(get_current_object) else user_proxy  # type: ignore
+    user = get_current_object() if callable(get_current_object) else user_proxy
 
     if not isinstance(user, Account):
         raise ValueError("current_user must be an Account instance")
