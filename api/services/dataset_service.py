@@ -2772,14 +2772,16 @@ class SegmentService:
             # calc embedding use tokens
             tokens = embedding_model.get_text_embedding_num_tokens(texts=[content])[0]
         lock_name = f"add_segment_lock_document_id_{document.id}"
+        segment_document: DocumentSegment | None = None
         try:
+            # Allocate the position and insert under the same lock so concurrent creates cannot collide.
             with redis_client.lock(lock_name, timeout=600):
                 max_position = (
                     db.session.query(func.max(DocumentSegment.position))
                     .where(DocumentSegment.document_id == document.id)
                     .scalar()
                 )
-                segment_document = DocumentSegment(
+                new_segment = DocumentSegment(
                     tenant_id=current_user.current_tenant_id,
                     dataset_id=document.dataset_id,
                     document_id=document.id,
@@ -2795,44 +2797,48 @@ class SegmentService:
                     created_by=current_user.id,
                 )
                 if document.doc_form == "qa_model":
-                    segment_document.word_count += len(args["answer"])
-                    segment_document.answer = args["answer"]
+                    new_segment.word_count += len(args["answer"])
+                    new_segment.answer = args["answer"]
 
-            db.session.add(segment_document)
-            # update document word count
-            assert document.word_count is not None
-            document.word_count += segment_document.word_count
-            db.session.add(document)
+                db.session.add(new_segment)
+                # update document word count
+                assert document.word_count is not None
+                document.word_count += new_segment.word_count
+                db.session.add(document)
+                db.session.commit()
+                segment_document = new_segment
+        except LockNotOwnedError:
+            # Raised on acquire (nothing written) or on release after the lock expired (segment committed).
+            pass
+
+        if segment_document is None:
+            return None
+
+        if args.get("attachment_ids"):
+            for attachment_id in args["attachment_ids"]:
+                binding = SegmentAttachmentBinding(
+                    tenant_id=current_user.current_tenant_id,
+                    dataset_id=document.dataset_id,
+                    document_id=document.id,
+                    segment_id=segment_document.id,
+                    attachment_id=attachment_id,
+                )
+                db.session.add(binding)
             db.session.commit()
 
-            if args.get("attachment_ids"):
-                for attachment_id in args["attachment_ids"]:
-                    binding = SegmentAttachmentBinding(
-                        tenant_id=current_user.current_tenant_id,
-                        dataset_id=document.dataset_id,
-                        document_id=document.id,
-                        segment_id=segment_document.id,
-                        attachment_id=attachment_id,
-                    )
-                    db.session.add(binding)
-                db.session.commit()
-
-            # save vector index
-            try:
-                keywords = args.get("keywords")
-                keywords_list = [keywords] if keywords is not None else None
-                VectorService.create_segments_vector(keywords_list, [segment_document], dataset, document.doc_form)
-            except Exception as e:
-                logger.exception("create segment index failed")
-                segment_document.enabled = False
-                segment_document.disabled_at = naive_utc_now()
-                segment_document.status = "error"
-                segment_document.error = str(e)
-                db.session.commit()
-            segment = db.session.query(DocumentSegment).where(DocumentSegment.id == segment_document.id).first()
-            return segment
-        except LockNotOwnedError:
-            pass
+        # save vector index
+        try:
+            keywords = args.get("keywords")
+            keywords_list = [keywords] if keywords is not None else None
+            VectorService.create_segments_vector(keywords_list, [segment_document], dataset, document.doc_form)
+        except Exception as e:
+            logger.exception("create segment index failed")
+            segment_document.enabled = False
+            segment_document.disabled_at = naive_utc_now()
+            segment_document.status = "error"
+            segment_document.error = str(e)
+            db.session.commit()
+        return db.session.query(DocumentSegment).where(DocumentSegment.id == segment_document.id).first()
 
     @classmethod
     def multi_create_segment(cls, segments: list, document: Document, dataset: Dataset):
@@ -2841,6 +2847,7 @@ class SegmentService:
 
         lock_name = f"multi_add_segment_lock_document_id_{document.id}"
         increment_word_count = 0
+        created_segments: list[DocumentSegment] | None = None
         try:
             with redis_client.lock(lock_name, timeout=600):
                 embedding_model = None
@@ -2921,9 +2928,11 @@ class SegmentService:
                         segment_document.status = "error"
                         segment_document.error = str(e)
                 db.session.commit()
-                return segment_data_list
+                created_segments = segment_data_list
         except LockNotOwnedError:
+            # Raised on release if the lock expired; the segments may already be committed.
             pass
+        return created_segments
 
     @classmethod
     def update_segment(cls, args: SegmentUpdateArgs, segment: DocumentSegment, document: Document, dataset: Dataset):

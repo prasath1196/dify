@@ -194,3 +194,111 @@ def test_multi_create_segment_ignores_lock_not_owned(
     db_mock.session.add.assert_not_called()
     db_mock.session.commit.assert_not_called()
     vector_service.create_segments_vector.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# 4. Lock expiring before release, after the work is done
+# ---------------------------------------------------------------------------
+
+
+class ExpiredOnReleaseLock:
+    """Lock that is acquired but has expired by the time it is released."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        raise LockNotOwnedError("lock expired before release")
+
+
+@pytest.fixture
+def expired_on_release_lock(monkeypatch):
+    monkeypatch.setattr(
+        "services.dataset_service.redis_client.lock", lambda name, timeout=None, *args, **kwargs: ExpiredOnReleaseLock()
+    )
+
+
+def _economy_qa_dataset_and_document(fake_current_user):
+    dataset = create_autospec(Dataset, instance=True)
+    dataset.id = "ds-1"
+    dataset.tenant_id = fake_current_user.current_tenant_id
+    dataset.indexing_technique = "economy"
+
+    document = create_autospec(Document, instance=True)
+    document.id = "doc-1"
+    document.dataset_id = dataset.id
+    document.word_count = 0
+    document.doc_form = "qa_model"
+    return dataset, document
+
+
+def test_create_segment_returns_segment_when_lock_expires_before_release(
+    monkeypatch, fake_current_user, expired_on_release_lock
+):
+    dataset, document = _economy_qa_dataset_and_document(fake_current_user)
+    created_segment = Mock()
+    db_mock = Mock()
+    db_mock.session.query.return_value.where.return_value.first.return_value = created_segment
+    db_mock.session.query.return_value.where.return_value.scalar.return_value = 0
+    monkeypatch.setattr("services.dataset_service.db", db_mock)
+    monkeypatch.setattr("services.dataset_service.VectorService", Mock())
+
+    result = SegmentService.create_segment(
+        args={"content": "question text", "answer": "answer text"}, document=document, dataset=dataset
+    )
+
+    assert result is created_segment
+    db_mock.session.commit.assert_called()
+
+
+def test_multi_create_segment_returns_segments_when_lock_expires_before_release(
+    monkeypatch, fake_current_user, expired_on_release_lock
+):
+    dataset, document = _economy_qa_dataset_and_document(fake_current_user)
+    db_mock = Mock()
+    db_mock.session.query.return_value.where.return_value.scalar.return_value = 0
+    monkeypatch.setattr("services.dataset_service.db", db_mock)
+    monkeypatch.setattr("services.dataset_service.VectorService", Mock())
+
+    result = SegmentService.multi_create_segment(
+        segments=[{"content": "q1", "answer": "a1"}, {"content": "q2", "answer": "a2"}],
+        document=document,
+        dataset=dataset,
+    )
+
+    assert result is not None
+    assert [segment.content for segment in result] == ["q1", "q2"]
+    db_mock.session.commit.assert_called()
+
+
+class RecordingLock:
+    def __init__(self):
+        self.held = False
+
+    def __enter__(self):
+        self.held = True
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.held = False
+        return False
+
+
+def test_create_segment_commits_new_segment_while_holding_the_position_lock(monkeypatch, fake_current_user):
+    dataset, document = _economy_qa_dataset_and_document(fake_current_user)
+    lock = RecordingLock()
+    monkeypatch.setattr("services.dataset_service.redis_client.lock", lambda name, timeout=None: lock)
+    lock_held_at_commit: list[bool] = []
+    db_mock = Mock()
+    db_mock.session.query.return_value.where.return_value.scalar.return_value = 3
+    db_mock.session.commit.side_effect = lambda: lock_held_at_commit.append(lock.held)
+    monkeypatch.setattr("services.dataset_service.db", db_mock)
+    monkeypatch.setattr("services.dataset_service.VectorService", Mock())
+
+    SegmentService.create_segment(
+        args={"content": "question text", "answer": "answer text"}, document=document, dataset=dataset
+    )
+
+    added_segment = db_mock.session.add.call_args_list[0].args[0]
+    assert added_segment.position == 4
+    assert lock_held_at_commit[0] is True
