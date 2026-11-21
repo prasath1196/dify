@@ -181,9 +181,6 @@ class BasicVariablesConfigManager:
             if "type" not in tool or not tool["type"]:
                 raise ValueError("external_data_tools[].type is required")
 
-            typ = tool["type"]
-            config = tool["config"]
-
-            ExternalDataToolFactory.validate_config(name=typ, tenant_id=tenant_id, config=config)
+            ExternalDataToolFactory.validate_config(name=tool["type"], tenant_id=tenant_id, config=tool["config"])
 
         return config, ["external_data_tools"]
