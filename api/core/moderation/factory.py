@@ -1,13 +1,19 @@
+from typing import cast
+
 from core.extension.extensible import ExtensionModule
 from core.moderation.base import Moderation, ModerationInputsResult, ModerationOutputsResult
 from extensions.ext_code_based_extension import code_based_extension
+
+
+def _moderation_class(name: str) -> type[Moderation]:
+    return cast(type[Moderation], code_based_extension.extension_class(ExtensionModule.MODERATION, name))
 
 
 class ModerationFactory:
     __extension_instance: Moderation
 
     def __init__(self, name: str, app_id: str, tenant_id: str, config: dict):
-        extension_class = code_based_extension.extension_class(ExtensionModule.MODERATION, name)
+        extension_class = _moderation_class(name)
         self.__extension_instance = extension_class(app_id, tenant_id, config)
 
     @classmethod
@@ -20,9 +26,7 @@ class ModerationFactory:
         :param config: the form config data
         :return:
         """
-        extension_class = code_based_extension.extension_class(ExtensionModule.MODERATION, name)
-        # FIXME: mypy error, try to fix it instead of using type: ignore
-        extension_class.validate_config(tenant_id, config)  # type: ignore
+        _moderation_class(name).validate_config(tenant_id, config)
 
     def moderation_for_inputs(self, inputs: dict, query: str = "") -> ModerationInputsResult:
         """

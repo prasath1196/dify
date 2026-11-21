@@ -303,7 +303,7 @@ class QueueNodeStartedEvent(AppQueueEvent):
     node_id: str
     node_title: str
     node_type: NodeType
-    node_run_index: int = 1  # FIXME(-LAN-): may not used
+    node_run_index: int = 1
     in_iteration_id: str | None = None
     in_loop_id: str | None = None
     start_at: datetime
