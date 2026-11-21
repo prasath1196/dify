@@ -72,10 +72,10 @@ class HitTestingService:
             attachment_ids=attachment_ids,
             top_k=retrieval_model.get("top_k", 4),
             score_threshold=retrieval_model.get("score_threshold", 0.0)
-            if retrieval_model["score_threshold_enabled"]
+            if retrieval_model.get("score_threshold_enabled")
             else 0.0,
             reranking_model=retrieval_model.get("reranking_model", None)
-            if retrieval_model["reranking_enable"]
+            if retrieval_model.get("reranking_enable")
             else None,
             reranking_mode=retrieval_model.get("reranking_mode") or "reranking_model",
             weights=retrieval_model.get("weights", None),

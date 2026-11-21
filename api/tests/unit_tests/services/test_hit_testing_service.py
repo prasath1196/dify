@@ -252,7 +252,7 @@ class TestHitTestingServiceRetrieve:
         retrieval_model = {
             "metadata_filtering_conditions": {
                 "conditions": [
-                    {"field": "category", "operator": "is", "value": "test"},
+                    {"name": "category", "comparison_operator": "is", "value": "test"},
                 ],
             },
         }
@@ -301,7 +301,7 @@ class TestHitTestingServiceRetrieve:
         retrieval_model = {
             "metadata_filtering_conditions": {
                 "conditions": [
-                    {"field": "category", "operator": "is", "value": "test"},
+                    {"name": "category", "comparison_operator": "is", "value": "test"},
                 ],
             },
         }
@@ -687,7 +687,7 @@ class TestHitTestingServiceHitTestingArgsCheck:
         args = {"query": ""}
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Query is required and cannot exceed 250 characters"):
+        with pytest.raises(ValueError, match="Query or attachment_ids is required"):
             HitTestingService.hit_testing_args_check(args)
 
     def test_hit_testing_args_check_none_query(self):
@@ -700,7 +700,7 @@ class TestHitTestingServiceHitTestingArgsCheck:
         args = {"query": None}
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Query is required and cannot exceed 250 characters"):
+        with pytest.raises(ValueError, match="Query or attachment_ids is required"):
             HitTestingService.hit_testing_args_check(args)
 
     def test_hit_testing_args_check_too_long_query(self):
@@ -713,7 +713,7 @@ class TestHitTestingServiceHitTestingArgsCheck:
         args = {"query": "a" * 251}
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Query is required and cannot exceed 250 characters"):
+        with pytest.raises(ValueError, match="Query cannot exceed 250 characters"):
             HitTestingService.hit_testing_args_check(args)
 
     def test_hit_testing_args_check_exactly_250_characters(self):
