@@ -1,6 +1,7 @@
 import importlib.util
 import logging
 import sys
+from importlib.machinery import ModuleSpec
 from types import ModuleType
 from typing import AnyStr
 
@@ -11,6 +12,7 @@ def import_module_from_source(*, module_name: str, py_file_path: AnyStr, use_laz
     """
     Importing a module from the source file directly
     """
+    spec: ModuleSpec | None
     try:
         existed_spec = importlib.util.find_spec(module_name)
         if existed_spec:
