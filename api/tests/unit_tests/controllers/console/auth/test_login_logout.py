@@ -133,6 +133,58 @@ class TestLoginApi:
     @patch("controllers.console.auth.login.TenantService.get_join_tenants")
     @patch("controllers.console.auth.login.AccountService.login")
     @patch("controllers.console.auth.login.AccountService.reset_login_error_rate_limit")
+    def test_login_with_invalid_invitation_token_authenticates_without_it(
+        self,
+        mock_reset_rate_limit,
+        mock_login,
+        mock_get_tenants,
+        mock_authenticate,
+        mock_get_invitation,
+        mock_is_rate_limit,
+        mock_db,
+        app,
+        mock_account,
+        mock_token_pair,
+    ):
+        """
+        An invite token that fails validation is ignored rather than passed to authenticate.
+        """
+        # Arrange
+        mock_db.session.query.return_value.first.return_value = MagicMock()
+        mock_is_rate_limit.return_value = False
+        mock_get_invitation.return_value = None
+        mock_authenticate.return_value = mock_account
+        mock_get_tenants.return_value = [MagicMock()]  # Has at least one tenant
+        mock_login.return_value = mock_token_pair
+
+        # Act
+        with app.test_request_context(
+            "/login",
+            method="POST",
+            json={
+                "email": "test@example.com",
+                "password": encode_password("ValidPass123!"),
+                "invite_token": "expired_token",
+            },
+        ):
+            login_api = LoginApi()
+            response = login_api.post()
+
+        # Assert
+        mock_get_invitation.assert_called_once_with(None, "test@example.com", "expired_token")
+        mock_authenticate.assert_called_once_with("test@example.com", "ValidPass123!")
+        mock_login.assert_called_once()
+        mock_reset_rate_limit.assert_called_once_with("test@example.com")
+        assert response.json["result"] == "success"
+
+    @patch("controllers.console.wraps.db")
+    @patch("controllers.console.auth.login.dify_config.BILLING_ENABLED", False)
+    @patch("controllers.console.auth.login.AccountService.is_login_error_rate_limit")
+    @patch("controllers.console.auth.login.RegisterService.get_invitation_if_token_valid")
+    @patch("controllers.console.auth.login.AccountService.authenticate")
+    @patch("controllers.console.auth.login.TenantService.get_join_tenants")
+    @patch("controllers.console.auth.login.AccountService.login")
+    @patch("controllers.console.auth.login.AccountService.reset_login_error_rate_limit")
     def test_successful_login_with_valid_invitation(
         self,
         mock_reset_rate_limit,
