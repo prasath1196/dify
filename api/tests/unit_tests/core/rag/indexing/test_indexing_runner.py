@@ -1155,6 +1155,12 @@ class TestIndexingRunnerDocumentCleaning:
         assert "\ufffe" not in result
         assert "Text with" in result
 
+    def test_filter_string_preserves_non_ascii_characters(self):
+        """Test filter_string does not strip letters such as ï, ¿ and ¾."""
+        text = "naïve ¿Qué? ¾"
+
+        assert IndexingRunner.filter_string(text) == text
+
 
 class TestIndexingRunnerSplitter:
     """Unit tests for text splitter configuration.
