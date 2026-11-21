@@ -189,3 +189,35 @@ def test_parse_openapi_to_tool_bundle_default_value_type_casting(app):
     available_param = params_by_name["available"]
     assert available_param.type == "boolean"
     assert available_param.default is True
+
+
+def _openapi_with_servers(servers: list[dict]) -> dict:
+    return {
+        "openapi": "3.0.0",
+        "info": {"title": "API", "version": "1.0.0"},
+        "servers": servers,
+        "paths": {"/ping": {"get": {"operationId": "ping", "responses": {"200": {"description": "ok"}}}}},
+    }
+
+
+def test_parse_openapi_with_request_env_ignores_servers_without_env(app):
+    openapi = _openapi_with_servers([{"url": "https://api.example.com"}])
+
+    with app.test_request_context(headers={"X-Request-Env": "staging"}):
+        tool_bundles = ApiBasedToolSchemaParser.parse_openapi_to_tool_bundle(openapi)
+
+    assert tool_bundles[0].server_url == "https://api.example.com/ping"
+
+
+def test_parse_openapi_with_request_env_selects_matching_server(app):
+    openapi = _openapi_with_servers(
+        [
+            {"url": "https://api.example.com"},
+            {"url": "https://staging.example.com", "env": "staging"},
+        ]
+    )
+
+    with app.test_request_context(headers={"X-Request-Env": "staging"}):
+        tool_bundles = ApiBasedToolSchemaParser.parse_openapi_to_tool_bundle(openapi)
+
+    assert tool_bundles[0].server_url == "https://staging.example.com/ping"
