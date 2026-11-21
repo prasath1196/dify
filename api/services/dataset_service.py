@@ -2805,7 +2805,7 @@ class SegmentService:
             db.session.add(document)
             db.session.commit()
 
-            if args["attachment_ids"]:
+            if args.get("attachment_ids"):
                 for attachment_id in args["attachment_ids"]:
                     binding = SegmentAttachmentBinding(
                         tenant_id=current_user.current_tenant_id,
@@ -3032,6 +3032,8 @@ class SegmentService:
                     else:
                         tokens = embedding_model.get_text_embedding_num_tokens(texts=[content])[0]
                 segment.content = content
+                if args.keywords:
+                    segment.keywords = args.keywords
                 segment.index_node_hash = segment_hash
                 segment.word_count = len(content)
                 segment.tokens = tokens

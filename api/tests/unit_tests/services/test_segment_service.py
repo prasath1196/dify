@@ -692,8 +692,8 @@ class TestSegmentServiceGetSegments:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session."""
-        with patch("services.dataset_service.db.session") as mock_db:
+        """Mock the database; these queries paginate through db.paginate."""
+        with patch("services.dataset_service.db") as mock_db:
             yield mock_db
 
     @pytest.fixture
@@ -813,8 +813,8 @@ class TestSegmentServiceGetChildChunks:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session."""
-        with patch("services.dataset_service.db.session") as mock_db:
+        """Mock the database; these queries paginate through db.paginate."""
+        with patch("services.dataset_service.db") as mock_db:
             yield mock_db
 
     @pytest.fixture
