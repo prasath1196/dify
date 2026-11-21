@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -11,6 +11,15 @@ class WebAppSettings(BaseModel):
         default="private",
         alias="accessMode",
     )
+
+
+def _parse_utc_timestamp(data: str) -> datetime:
+    """Parse an ISO timestamp from the enterprise API; values without an offset are UTC."""
+    try:
+        parsed = datetime.fromisoformat(data)
+    except ValueError as e:
+        raise ValueError(f"Invalid date format: {data}") from e
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
 class EnterpriseService:
@@ -27,22 +36,14 @@ class EnterpriseService:
         data = EnterpriseRequest.send_request("GET", "/sso/app/last-update-time")
         if not data:
             raise ValueError("No data found.")
-        try:
-            # parse the UTC timestamp from the response
-            return datetime.fromisoformat(data)
-        except ValueError as e:
-            raise ValueError(f"Invalid date format: {data}") from e
+        return _parse_utc_timestamp(data)
 
     @classmethod
     def get_workspace_sso_settings_last_update_time(cls) -> datetime:
         data = EnterpriseRequest.send_request("GET", "/sso/workspace/last-update-time")
         if not data:
             raise ValueError("No data found.")
-        try:
-            # parse the UTC timestamp from the response
-            return datetime.fromisoformat(data)
-        except ValueError as e:
-            raise ValueError(f"Invalid date format: {data}") from e
+        return _parse_utc_timestamp(data)
 
     class WebAppAuth:
         @classmethod
