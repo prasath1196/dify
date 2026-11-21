@@ -1,4 +1,5 @@
 import threading
+from datetime import UTC
 from typing import Any
 
 import pytz
@@ -73,7 +74,8 @@ class AgentService:
             "meta": {
                 "status": "success",
                 "executor": executor,
-                "start_time": message.created_at.astimezone(timezone).isoformat(),
+                # created_at is naive UTC; astimezone() alone would read it as server-local time.
+                "start_time": message.created_at.replace(tzinfo=UTC).astimezone(timezone).isoformat(),
                 "elapsed_time": message.provider_response_latency,
                 "total_tokens": message.answer_tokens + message.message_tokens,
                 "agent_mode": app_model_config.agent_mode_dict.get("strategy", "react"),
