@@ -22,6 +22,7 @@ from opentelemetry.trace import Link, SpanContext, TraceFlags
 from configs import dify_config
 from core.ops.aliyun_trace.entities.aliyun_trace_entity import SpanData
 from core.ops.aliyun_trace.entities.semconv import ACS_ARMS_SERVICE_FEATURE
+from core.ops.utils import datetime_to_epoch_nanos
 
 INVALID_SPAN_ID: Final[int] = 0x0000000000000000
 INVALID_TRACE_ID: Final[int] = 0x00000000000000000000000000000000
@@ -227,8 +228,7 @@ def convert_to_span_id(uuid_v4: str | None, span_type: str) -> int:
 def convert_datetime_to_nanoseconds(start_time_a: datetime | None) -> int | None:
     if start_time_a is None:
         return None
-    timestamp_in_seconds = start_time_a.timestamp()
-    return int(timestamp_in_seconds * 1e9)
+    return datetime_to_epoch_nanos(start_time_a)
 
 
 def build_endpoint(base_url: str, license_key: str) -> str:

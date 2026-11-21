@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Union
 from urllib.parse import urlparse
 
@@ -19,6 +19,13 @@ def filter_none_values(data: dict):
         else:
             new_data[key] = value
     return new_data
+
+
+def datetime_to_epoch_nanos(dt: datetime) -> int:
+    """Convert to nanoseconds since the Unix epoch, treating naive datetimes as UTC like the rest of Dify."""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return int(dt.timestamp() * 1_000_000_000)
 
 
 def get_message_data(message_id: str):

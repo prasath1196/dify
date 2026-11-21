@@ -5,10 +5,12 @@ Utility functions for Tencent APM tracing
 import hashlib
 import random
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import cast
 
 from opentelemetry.trace import Link, SpanContext, TraceFlags
+
+from core.ops.utils import datetime_to_epoch_nanos
 
 
 class TencentTraceUtils:
@@ -44,10 +46,7 @@ class TencentTraceUtils:
 
     @staticmethod
     def convert_datetime_to_nanoseconds(start_time: datetime | None) -> int:
-        if start_time is None:
-            start_time = datetime.now()
-        timestamp_in_seconds = start_time.timestamp()
-        return int(timestamp_in_seconds * 1e9)
+        return datetime_to_epoch_nanos(start_time or datetime.now(UTC))
 
     @staticmethod
     def create_link(trace_id_str: str) -> Link:

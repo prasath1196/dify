@@ -23,6 +23,7 @@ from core.ops.entities.trace_entity import (
     TraceTaskName,
     WorkflowTraceInfo,
 )
+from core.ops.utils import datetime_to_epoch_nanos
 from core.workflow.enums import NodeType
 from extensions.ext_database import db
 from models import EndUser
@@ -35,7 +36,7 @@ def datetime_to_nanoseconds(dt: datetime | None) -> int | None:
     """Convert datetime to nanosecond timestamp for MLflow API"""
     if dt is None:
         return None
-    return int(dt.timestamp() * 1_000_000_000)
+    return datetime_to_epoch_nanos(dt)
 
 
 class MLflowDataTrace(BaseTraceInstance):

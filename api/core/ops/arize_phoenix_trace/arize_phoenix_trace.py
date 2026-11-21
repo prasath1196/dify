@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import traceback
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Union, cast
 from urllib.parse import urlparse
 
@@ -37,6 +37,7 @@ from core.ops.entities.trace_entity import (
     TraceTaskName,
     WorkflowTraceInfo,
 )
+from core.ops.utils import datetime_to_epoch_nanos
 from core.repositories import DifyCoreRepositoryFactory
 from extensions.ext_database import db
 from models.model import EndUser, MessageFile
@@ -102,9 +103,7 @@ def setup_tracer(arize_phoenix_config: ArizeConfig | PhoenixConfig) -> tuple[tra
 
 def datetime_to_nanos(dt: datetime | None) -> int:
     """Convert datetime to nanoseconds since epoch for Arize/Phoenix."""
-    if dt is None:
-        dt = datetime.now()
-    return int(dt.timestamp() * 1_000_000_000)
+    return datetime_to_epoch_nanos(dt or datetime.now(UTC))
 
 
 def error_to_string(error: Exception | str | None) -> str:
