@@ -8,7 +8,7 @@ from core.ops.aliyun_trace.data_exporter.traceclient import convert_datetime_to_
 from core.ops.arize_phoenix_trace.arize_phoenix_trace import datetime_to_nanos as arize_convert
 from core.ops.mlflow_trace.mlflow_trace import datetime_to_nanoseconds as mlflow_convert
 from core.ops.tencent_trace.utils import TencentTraceUtils
-from core.ops.utils import datetime_to_epoch_nanos
+from core.ops.utils import datetime_to_epoch_nanos, measure_time
 
 _NAIVE_UTC = datetime(2025, 1, 1, 12, 0, 0)
 _EXPECTED_NS = int(datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC).timestamp()) * 1_000_000_000
@@ -48,3 +48,13 @@ def test_none_handling_is_unchanged():
     now_ns = int(datetime.now(UTC).timestamp() * 1_000_000_000)
     assert abs(arize_convert(None) - now_ns) < 60 * 1_000_000_000
     assert abs(TencentTraceUtils.convert_datetime_to_nanoseconds(None) - now_ns) < 60 * 1_000_000_000
+
+
+def test_measure_time_records_naive_utc(non_utc_timezone: None):
+    with measure_time() as timer:
+        pass
+
+    utc_now = datetime.now(UTC).replace(tzinfo=None)
+    assert timer["start"].tzinfo is None
+    assert abs(timer["start"] - utc_now) < timedelta(minutes=1)
+    assert timer["end"] >= timer["start"]

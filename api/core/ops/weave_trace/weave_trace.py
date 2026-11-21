@@ -33,6 +33,7 @@ from core.ops.weave_trace.entities.weave_trace_entity import WeaveTraceModel
 from core.repositories import DifyCoreRepositoryFactory
 from core.workflow.enums import NodeType, WorkflowNodeExecutionMetadataKey
 from extensions.ext_database import db
+from libs.datetime_utils import naive_utc_now
 from models import EndUser, MessageFile, WorkflowNodeExecutionTriggeredFrom
 
 logger = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ class WeaveDataTrace(BaseTraceInstance):
     def workflow_trace(self, trace_info: WorkflowTraceInfo):
         trace_id = trace_info.trace_id or trace_info.message_id or trace_info.workflow_run_id
         if trace_info.start_time is None:
-            trace_info.start_time = datetime.now()
+            trace_info.start_time = naive_utc_now()
 
         if trace_info.message_id:
             message_attributes = trace_info.metadata
@@ -180,7 +181,7 @@ class WeaveDataTrace(BaseTraceInstance):
             else:
                 inputs = node_execution.inputs or {}
             outputs = node_execution.outputs or {}
-            created_at = node_execution.created_at or datetime.now()
+            created_at = node_execution.created_at or naive_utc_now()
             elapsed_time = node_execution.elapsed_time
             finished_at = created_at + timedelta(seconds=elapsed_time)
 

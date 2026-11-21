@@ -24,6 +24,7 @@ from core.ops.entities.trace_entity import (
 from core.repositories import DifyCoreRepositoryFactory
 from core.workflow.enums import NodeType, WorkflowNodeExecutionMetadataKey
 from extensions.ext_database import db
+from libs.datetime_utils import naive_utc_now
 from models import EndUser, MessageFile, WorkflowNodeExecutionTriggeredFrom
 
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ def prepare_opik_uuid(user_datetime: datetime | None, user_uuid: str | None):
     """
 
     if user_datetime is None:
-        user_datetime = datetime.now()
+        user_datetime = naive_utc_now()
 
     if user_uuid is None:
         user_uuid = str(uuid.uuid4())
@@ -183,7 +184,7 @@ class OpikDataTrace(BaseTraceInstance):
             else:
                 inputs = node_execution.inputs or {}
             outputs = node_execution.outputs or {}
-            created_at = node_execution.created_at or datetime.now()
+            created_at = node_execution.created_at or naive_utc_now()
             elapsed_time = node_execution.elapsed_time
             finished_at = created_at + timedelta(seconds=elapsed_time)
 

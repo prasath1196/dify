@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from langfuse import Langfuse
 from sqlalchemy.orm import sessionmaker
@@ -30,6 +30,7 @@ from core.ops.utils import filter_none_values
 from core.repositories import DifyCoreRepositoryFactory
 from core.workflow.enums import NodeType
 from extensions.ext_database import db
+from libs.datetime_utils import naive_utc_now
 from models import EndUser, WorkflowNodeExecutionTriggeredFrom
 from models.enums import MessageStatus
 
@@ -146,7 +147,7 @@ class LangFuseDataTrace(BaseTraceInstance):
             else:
                 inputs = node_execution.inputs or {}
             outputs = node_execution.outputs or {}
-            created_at = node_execution.created_at or datetime.now()
+            created_at = node_execution.created_at or naive_utc_now()
             elapsed_time = node_execution.elapsed_time
             finished_at = created_at + timedelta(seconds=elapsed_time)
 

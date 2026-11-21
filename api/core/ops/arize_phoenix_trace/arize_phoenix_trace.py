@@ -40,6 +40,7 @@ from core.ops.entities.trace_entity import (
 from core.ops.utils import datetime_to_epoch_nanos
 from core.repositories import DifyCoreRepositoryFactory
 from extensions.ext_database import db
+from libs.datetime_utils import naive_utc_now
 from models.model import EndUser, MessageFile
 from models.workflow import WorkflowNodeExecutionTriggeredFrom
 
@@ -265,7 +266,7 @@ class ArizePhoenixDataTrace(BaseTraceInstance):
                 inputs_value = node_execution.inputs or {}
                 outputs_value = node_execution.outputs or {}
 
-                created_at = node_execution.created_at or datetime.now()
+                created_at = node_execution.created_at or naive_utc_now()
                 elapsed_time = node_execution.elapsed_time
                 finished_at = created_at + timedelta(seconds=elapsed_time)
 

@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from sqlalchemy import select
 
 from extensions.ext_database import db
+from libs.datetime_utils import naive_utc_now
 from models.model import Message
 
 
@@ -34,11 +35,11 @@ def get_message_data(message_id: str):
 
 @contextmanager
 def measure_time():
-    timing_info = {"start": datetime.now(), "end": None}
+    timing_info = {"start": naive_utc_now(), "end": None}
     try:
         yield timing_info
     finally:
-        timing_info["end"] = datetime.now()
+        timing_info["end"] = naive_utc_now()
 
 
 def replace_text_with_content(data):
